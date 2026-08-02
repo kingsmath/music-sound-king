@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5YW0T2C109"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-5YW0T2C109');
+    </script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>악기 퍼즐킹</title>
+<meta name="description" content="동작하는 악기 소리와 함께하는 2인용 악기 매치 퍼즐 게임">
+<meta name="keywords" content="악기, 퍼즐, 게임, 관악기, 현악기, 타악기, 음악 교육">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+    :root {
+        --app-height: 100vh;
+        --primary-gold: #ffd700;
+        --bg-dark: #0a0a0c;
+        --panel-bg: rgba(22, 22, 27, 0.95);
+        --neon-blue: #00f0ff;
+        --neon-red: #ff0055;
+    }
+
+    html, body {
+        margin: 0; padding: 0; overflow: hidden;
+        background-color: var(--bg-dark);
+        font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+        width: 100%; height: 100vh; height: var(--app-height);
+        touch-action: none; 
+        -webkit-user-select: none; user-select: none;
+        -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+    }
+
+    body { display: flex; flex-direction: column; color: #fff; }
+
+    #langSelectorContainer {
+        position: absolute; top: 15px; right: 15px; z-index: 99999 !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(31, 41, 55, 0.5); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+    .resize-text { white-space: nowrap; transition: font-size 0.2s ease; padding-bottom: 5px; }
+
+    /* --- 게임 탑 영역 스타일 --- */
+    #top-area {
+        flex: 0 0 25%; min-height: 120px;
+        background: linear-gradient(180deg, #121216 0%, #08080a 100%);
+        border-bottom: 4px solid var(--primary-gold);
+        display: flex; justify-content: center; align-items: center;
+        position: relative; z-index: 10; box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+    #scoreboard-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 20px; height: 100%; }
+    .player-group { display: flex; align-items: center; gap: 15px; height: 100%; flex: 1; }
+    .p1-group { justify-content: flex-start; } 
+    .p2-group { justify-content: flex-end; }   
+    .ref-img-large { 
+        height: 85%; max-height: 120px; min-height: 90px; aspect-ratio: auto;
+        border: 4px solid var(--primary-gold); border-radius: 12px; 
+        background: #000; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .ref-img-large img { width: 100%; height: 100%; object-fit: cover; }
+    .player-zone {
+        display: flex; align-items: center; gap: 15px; padding: 10px 25px;
+        border-radius: 20px; background: rgba(255,255,255,0.03);
+        min-width: 200px; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
+    .p1-zone { border: 3px solid var(--neon-red); color: var(--neon-red); text-shadow: 0 0 10px rgba(255,0,85,0.5); }
+    .p2-zone { border: 3px solid var(--neon-blue); color: var(--neon-blue); flex-direction: row-reverse; text-shadow: 0 0 10px rgba(0,240,255,0.5); } 
+    .player-label { font-size: clamp(20px, 2.5vw, 30px); font-weight: 900; }
+    .score { font-size: clamp(40px, 4vw, 60px); font-weight: 950; margin: 0 10px; line-height: 1; }
+    .center-info { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 0 20px; }
+    .timer-container { text-align: center; width: 150px; }
+    .timer-label { color: var(--primary-gold); font-size: clamp(16px, 1.8vw, 24px); margin-bottom: 8px; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    #timer-bar { width: 100%; height: 14px; background: #222; border-radius: 7px; overflow: hidden; border: 2px solid #444; }
+    #timer-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-red), var(--primary-gold), #4cd964); transition: width 1s linear; }
+
+    /* --- 게임 영역 스타일 --- */
+    #game-area-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; padding: 15px; background-color: #050507; position: relative; overflow: hidden; }
+    #game-area { width: 100%; height: 100%; display: flex; position: relative; gap: 20px; }
+    .table-bg { flex: 1; border-radius: 20px; border: 8px solid #221a15; box-shadow: inset 0 0 60px rgba(0,0,0,0.9), 0 10px 25px rgba(0,0,0,0.6); position: relative; display: flex; justify-content: center; align-items: center; }
+    .left-table { background: radial-gradient(circle at 30% 30%, #2c1a1d 0%, #0d0607 90%); }
+    .right-table { background: radial-gradient(circle at 70% 30%, #151e2b 0%, #05080e 90%); }
+    .divider { position: absolute; left: 50%; top: 10px; bottom: 10px; width: 6px; background: rgba(255, 215, 0, 0.25); transform: translateX(-50%); z-index: 4; border-radius: 3px; }
+
+    /* --- 보드 및 조각 스타일 --- */
+    .board { position: relative; background: rgba(0, 0, 0, 0.6); box-shadow: 0 15px 40px rgba(0,0,0,0.9); border: 4px solid var(--primary-gold); box-sizing: content-box; overflow: hidden; border-radius: 12px; }
+    .puzzle-piece { position: absolute; box-sizing: border-box; border: 1px solid rgba(255, 255, 255, 0.15); background-repeat: no-repeat; transition: left 0.15s ease-out, top 0.15s ease-out; touch-action: none; cursor: grab; }
+    .puzzle-piece.dragging { transition: none; z-index: 100; outline: 4px solid var(--primary-gold); box-shadow: 0 25px 50px rgba(0,0,0,0.8); cursor: grabbing; opacity: 0.95; }
+
+    /* --- 플로팅 및 오버레이 버튼 --- */
+    .float-btn { position: fixed; bottom: 20px; width: 55px; height: 55px; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; cursor: pointer; z-index: 1000; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; transition: all 0.2s; backdrop-filter: blur(8px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .float-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); border-color: var(--primary-gold); }
+    .float-btn:active { transform: scale(0.95); }
+    #fullscreen-btn { right: 20px; }
+    #btn-home { left: 20px; }
+
+    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,7,0.92); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(12px); }
+    .modal-content { background: var(--panel-bg); padding: 25px 35px; border-radius: 30px; border: 2px solid rgba(255, 215, 0, 0.3); display: flex; flex-direction: column; align-items: center; max-width: 950px; width: 95%; max-height: 95vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.9); }
+    .modal-content::-webkit-scrollbar { width: 8px; }
+    .modal-content::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+    h1 { font-size: clamp(35px, 5vw, 60px) !important; margin: 0 0 15px 0; font-weight: 900; background: linear-gradient(to bottom, #ffffff, var(--primary-gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4)); line-height: 1.2; word-break: keep-all; text-align: center; letter-spacing: -1px; }
+
+    /* --- 탭 메뉴 스타일 (4개 탭) --- */
+    .tab-container { display: flex; background: rgba(0,0,0,0.6); border-radius: 35px; padding: 6px; margin-bottom: 20px; width: 100%; max-width: 750px; gap: 4px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8); }
+    .tab-btn { flex: 1; padding: 12px 6px; font-size: clamp(13px, 1.8vw, 17px); font-weight: 900; color: #888; background: transparent; border: none; border-radius: 30px; cursor: pointer; transition: all 0.3s; text-align: center; }
+    .tab-btn.active { background: var(--primary-gold); color: #000; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4); }
+    .tab-content { width: 100%; display: none; flex-direction: column; align-items: center; margin-bottom: 20px; }
+    .tab-content.active { display: flex; animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* --- 갤러리 리스트 스타일 --- */
+    .gallery-wrapper { width: 100%; max-width: 850px; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 20px; border: 1px solid #333; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; max-height: 32vh; overflow-y: auto; padding-right: 5px; }
+    .gallery-grid::-webkit-scrollbar { width: 6px; }
+    .gallery-grid::-webkit-scrollbar-thumb { background: var(--primary-gold); border-radius: 4px; }
+    
+    .gallery-item { position: relative; border-radius: 12px; overflow: hidden; border: 3px solid transparent; cursor: pointer; transition: all 0.25s; background: #1a1a22; display: flex; flex-direction: column; height: 125px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+    .gallery-item img { width: 100%; height: 85px; object-fit: cover; background: #222; }
+    .gallery-item .g-title { padding: 6px; font-size: 13px; font-weight: 700; text-align: center; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gallery-item:hover { transform: translateY(-4px); border-color: rgba(255, 215, 0, 0.5); }
+    .gallery-item.active { border-color: var(--primary-gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+
+    .random-box { width: 100%; max-width: 500px; border-radius: 28px; padding: 30px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; border: 3px dashed var(--primary-gold); background: rgba(255, 215, 0, 0.03); }
+    .random-mark { font-size: 90px; font-weight: 950; color: var(--primary-gold); line-height: 1; text-shadow: 0 0 30px rgba(255, 204, 0, 0.6); animation: floatRandom 2s ease-in-out infinite; }
+    @keyframes floatRandom { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* --- 게임 설정 스타일 --- */
+    .settings-row { display: flex; flex-direction: row; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%; margin-bottom: 25px; }
+    .setting-group { display: flex; flex-direction: row; align-items: center; gap: 12px; background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 35px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+    .setting-title { font-size: 16px; color: var(--primary-gold); font-weight: 900; white-space: nowrap; }
+    .opt-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .opt-btn { padding: 6px 15px; font-size: 15px; font-weight: 900; background: rgba(255, 255, 255, 0.05); border: 2px solid #555; border-radius: 12px; color: #ccc; cursor: pointer; transition: all 0.2s; }
+    .opt-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: #888; }
+    .opt-btn.active { background: var(--primary-gold); color: #000; border-color: var(--primary-gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+    .start-game-btn { padding: 14px 90px; font-size: 28px; font-weight: 950; background: linear-gradient(to bottom, var(--primary-gold), #ffa500); border: 3px solid #fff; border-radius: 60px; color: #111; cursor: pointer; box-shadow: 0 12px 35px rgba(255, 165, 0, 0.4); transition: transform 0.1s, box-shadow 0.2s; }
+    .start-game-btn:hover { transform: scale(1.05); box-shadow: 0 15px 45px rgba(255, 165, 0, 0.6); }
+    .start-game-btn:active { transform: scale(0.95); }
+
+    .other-game-link { margin-top: 15px; color: #888; text-decoration: none; font-size: 15px; border-bottom: 1px solid #555; padding-bottom: 2px; transition: color 0.2s; }
+    .other-game-link:hover { color: #fff; border-color: #fff; }
+
+    #end-artwork { max-height: 45vh; max-width: 100%; object-fit: cover; border: 8px solid var(--primary-gold); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); margin-bottom: 20px; }
+    .diff-btn { padding: 12px 35px; font-size: 20px; font-weight: 900; background: #1a1a24; border: 2px solid #555; border-radius: 18px; color: #fff; cursor: pointer; transition: all 0.2s; }
+    .diff-btn:hover { border-color: var(--primary-gold); transform: scale(1.05); box-shadow: 0 5px 15px rgba(255,215,0,0.2); }
+
+    .loading-spinner { border: 6px solid #222; border-top: 6px solid var(--primary-gold); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0) } 100% { transform: rotate(360deg) } }
+    .hidden { display: none !important; }
+
+    /* --- 악기 상세 패널 --- */
+    .info-panel {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(8, 8, 10, 0.95); color: white;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        box-sizing: border-box; text-align: center; border-radius: 0; 
+        opacity: 0; transition: opacity 0.5s ease-in-out; z-index: 50;
+        backdrop-filter: blur(8px);
+    }
+    .info-panel.visible { opacity: 1; }
+    .info-content {
+        padding: 25px; width: 100%; max-height: 100%; overflow-y: auto;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .info-content::-webkit-scrollbar { width: 6px; }
+    .info-content::-webkit-scrollbar-thumb { background: var(--primary-gold); border-radius: 4px; }
+    .info-title { font-size: clamp(22px, 3.5vw, 48px); font-weight: 950; color: var(--primary-gold); margin-bottom: 5px; text-shadow: 0 0 15px rgba(255,215,0,0.3); }
+    .info-category { font-size: clamp(16px, 2.5vw, 26px); color: #aaa; margin-bottom: 20px; font-weight: 700; }
+    .info-desc { font-size: clamp(14px, 1.8vw, 18px); line-height: 1.6; word-break: keep-all; margin-bottom: 25px; color: #e5e5ed; max-width: 600px; }
+
+    /* --- 퀴즈 패널 스타일 (3지선다) --- */
+    .quiz-panel {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(5,5,8,0.92); display: flex; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(8px);
+    }
+    .quiz-title { font-size: clamp(18px, 2.5vw, 30px); color: var(--primary-gold); font-weight: 950; margin-bottom: 25px; text-align:center; word-break: keep-all; padding: 0 15px; line-height: 1.4; text-shadow: 0 0 10px rgba(255,215,0,0.2); }
+    .quiz-btn-group { display: flex; gap: 15px; flex-direction: column; width: 80%; max-width: 320px; }
+    .quiz-btn { padding: 14px 20px; font-size: clamp(16px, 2vw, 22px); font-weight: 900; border-radius: 16px; border: 2px solid var(--primary-gold); background: #15151a; color: #fff; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
+    .quiz-btn:hover { background: var(--primary-gold); color: #000; transform: scale(1.03); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+
+    /* --- 오답 피드백 스타일 --- */
+    .wrong-feedback {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 0, 85, 0.95);
+        color: white;
+        padding: 15px 35px;
+        border-radius: 16px;
+        font-size: clamp(18px, 2.5vw, 28px);
+        font-weight: 900;
+        z-index: 300;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+        border: 2px solid #ffccd5;
+        pointer-events: none;
+        animation: fadeUpOut 2s ease-in-out forwards;
+        white-space: nowrap;
+    }
+
+    @keyframes fadeUpOut {
+        0% { opacity: 0; transform: translate(-50%, -40%); }
+        15% { opacity: 1; transform: translate(-50%, -50%); }
+        80% { opacity: 1; transform: translate(-50%, -50%); }
+        100% { opacity: 0; transform: translate(-50%, -60%); }
+    }
+
+    /* --- 다국어 모달 및 언어 선택기 전용 격리 스타일 --- */
+    #langModal, #langModal * {
+        box-sizing: border-box !important;
+    }
+
+    /* Font Awesome 아이콘 깨짐 방지: 폰트 어썸 클래스는 고유 서체 강제 지정 */
+    #langModal .fa, #langModal .fas, #langModal .far, #langModal .fa-solid, #langModal .fa-regular, #langModal .fa-brands,
+    #langSelectorContainer .fa, #langSelectorContainer .fa-solid,
+    #toastNotification .fa, #toastNotification .fa-solid {
+        font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands' !important;
+        font-style: normal;
+        font-weight: 900;
+    }
+
+    /* 모달 레이어 최상단 고정 (z-index 99999) */
+    .modal-overlay-lang {
+        position: fixed;
+        inset: 0;
+        z-index: 99999 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(5px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 16px;
+    }
+    .modal-overlay-lang.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .modal-content-lang {
+        background-color: #0f0f13;
+        border: 2px solid #2e3039;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 850px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        transform: scale(0.95) translateY(-10px);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modal-overlay-lang.active .modal-content-lang {
+        transform: scale(1) translateY(0);
+    }
+
+    /* 토스트 알림 z-index 및 레이아웃 */
+    .toast-lang {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 99999 !important;
+        background-color: #1a1a22;
+        border: 2px solid #2e3039;
+        border-radius: 16px;
+        padding: 16px 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transform: translateY(150%);
+        opacity: 0;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toast-lang.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+</style>
+</head>
+<body>
+    
+    <!-- 글로벌 언어 선택기 버튼 -->
+    <div id="langSelectorContainer">
+        <button id="langTriggerBtn" class="flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700 border border-gray-600 rounded-full px-4 py-2 transition-all duration-200 text-sm font-medium shadow-lg text-white">
+            <i class="fa-solid fa-globe text-gray-400"></i>
+            <img id="currentFlag" src="https://flagcdn.com/w40/kr.png" alt="KR" class="w-5 h-auto rounded-[2px] shadow-sm">
+            <span id="currentLangName" class="hidden sm:inline-block">한국어</span>
+            <i class="fa-solid fa-chevron-down text-gray-400 ml-1 text-xs"></i>
+        </button>
+    </div>
+
+    <!-- 다국어 선택 모달 -->
+    <div id="langModal" class="modal-overlay-lang">
+        <div class="modal-content-lang">
+            <div class="flex items-center justify-between p-5 border-b border-gray-800 bg-gray-900/95 sticky top-0 z-10">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-language text-yellow-500"></i>
+                        <span>Language / 언어</span>
+                    </h2>
+                </div>
+                <button id="closeModalBtn" class="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-5 pb-2 bg-gray-900">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search / 검색 ..." 
+                        class="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 block pl-11 p-3.5 outline-none transition-all placeholder-gray-500">
+                </div>
+            </div>
+
+            <div class="p-5 overflow-y-auto custom-scrollbar flex-1 bg-gray-900">
+                <div id="languageGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    <!-- 언어 목록 렌더링 영역 -->
+                </div>
+                <div id="noResult" class="hidden flex-col items-center justify-center py-12 text-gray-500">
+                    <i class="fa-regular fa-face-frown-open text-4xl mb-3"></i>
+                    <p>No results / 검색 결과 없음</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 토스트 알림창 -->
+    <div id="toastNotification" class="toast-lang">
+        <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 shrink-0">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <div>
+            <p id="ui-toast" class="text-sm font-medium text-white">언어가 변경되었습니다.</p>
+            <p id="toastLangName" class="text-xs text-gray-400">Korean</p>
+        </div>
+    </div>
+
+    <div id="top-area">
+        <div id="scoreboard-row">
+            <div class="player-group p1-group">
+                <div class="ref-img-large"><img class="ref-image" src="" alt="Instrument" onerror="this.onerror=null; this.src='img/violin.webp';"></div>
+                <div class="player-zone p1-zone">
+                    <div class="player-label resize-text" data-i18n="red_team">빨강팀</div>
+                    <div class="score" id="score-p1">0%</div>
+                </div>
+            </div>
+            <div class="center-info">
+                <div class="timer-container">
+                    <div class="timer-label resize-text" id="txt-timer" data-i18n="timer_label">진행 시간</div>
+                    <div id="timer-bar"><div id="timer-fill"></div></div>
+                </div>
+            </div>
+            <div class="player-group p2-group">
+                <div class="player-zone p2-zone">
+                    <div class="player-label resize-text" data-i18n="blue_team">파랑팀</div>
+                    <div class="score" id="score-p2">0%</div>
+                </div>
+                <div class="ref-img-large"><img class="ref-image" src="" alt="Instrument" onerror="this.onerror=null; this.src='img/violin.webp';"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-area-wrapper">
+        <div id="game-area">
+            <div class="table-bg left-table"><div id="board-p1" class="board"></div></div>
+            <div class="divider"></div>
+            <div class="table-bg right-table"><div id="board-p2" class="board"></div></div>
+        </div>
+    </div>
+
+    <div id="btn-home" class="float-btn" title="처음으로">🏠</div>
+    <div id="fullscreen-btn" class="float-btn" onclick="toggleFullscreen()" title="전체화면">⛶</div>
+
+    <!-- 대기/시작 오버레이 -->
+    <div id="overlay-start" class="overlay">
+        <div class="modal-content">
+            <h1 class="resize-text" data-i18n="title">악기 퍼즐킹</h1>
+            
+            <div class="tab-container">
+                <button class="tab-btn active resize-text" data-tab="tab-random" onclick="switchTab('tab-random')" data-i18n="tab_random">랜덤 선택</button>
+                <button class="tab-btn resize-text" data-tab="tab-korean" onclick="switchTab('tab-korean')" data-i18n="tab_korean">국악기</button>
+                <button class="tab-btn resize-text" data-tab="tab-wind" onclick="switchTab('tab-wind')" data-i18n="tab_wind">관악기</button>
+                <button class="tab-btn resize-text" data-tab="tab-string" onclick="switchTab('tab-string')" data-i18n="tab_string">현악기</button>
+                <button class="tab-btn resize-text" data-tab="tab-percussion" onclick="switchTab('tab-percussion')" data-i18n="tab_percussion">타악기</button>
+            </div>
+
+            <!-- 랜덤 탭 -->
+            <div id="tab-random" class="tab-content active">
+                <div class="random-box">
+                    <div class="random-mark">?</div>
+                    <div style="font-size: 20px; color: #ddd; font-weight: 700;" class="resize-text" data-i18n="random_desc">어떤 악기가 등장할까요?</div>
+                </div>
+            </div>
+
+            <!-- 국악기 탭 -->
+            <div id="tab-korean" class="tab-content">
+                <div class="gallery-wrapper">
+                    <div class="gallery-grid" id="gallery-grid-korean"></div>
+                </div>
+            </div>
+
+            <!-- 관악기 탭 -->
+            <div id="tab-wind" class="tab-content">
+                <div class="gallery-wrapper">
+                    <div class="gallery-grid" id="gallery-grid-wind"></div>
+                </div>
+            </div>
+
+            <!-- 현악기 탭 -->
+            <div id="tab-string" class="tab-content">
+                <div class="gallery-wrapper">
+                    <div class="gallery-grid" id="gallery-grid-string"></div>
+                </div>
+            </div>
+
+            <!-- 타악기 탭 -->
+            <div id="tab-percussion" class="tab-content">
+                <div class="gallery-wrapper">
+                    <div class="gallery-grid" id="gallery-grid-percussion"></div>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="setting-group">
+                    <div class="setting-title resize-text" data-i18n="setting_time">제한 시간</div>
+                    <div class="opt-group" id="time-options">
+                        <button class="opt-btn resize-text" onclick="selectTime(60, this)" data-i18n="time_1">1분</button>
+                        <button class="opt-btn resize-text" onclick="selectTime(120, this)" data-i18n="time_2">2분</button>
+                        <button class="opt-btn active resize-text" onclick="selectTime(180, this)" data-i18n="time_3">3분</button>
+                        <button class="opt-btn resize-text" onclick="selectTime(300, this)" data-i18n="time_5">5분</button>
+                        <button class="opt-btn resize-text" onclick="selectTime(0, this)" data-i18n="time_unlimited">무제한</button>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <div class="setting-title resize-text" data-i18n="setting_diff">난이도</div>
+                    <div class="opt-group" id="grid-options">
+                        <button class="opt-btn active" onclick="selectGrid(3, this)">3x3</button>
+                        <button class="opt-btn" onclick="selectGrid(4, this)">4x4</button> 
+                        <button class="opt-btn" onclick="selectGrid(5, this)">5x5</button>
+                        <button class="opt-btn" onclick="selectGrid(7, this)">7x7</button>
+                        <button class="opt-btn" onclick="selectGrid(10, this)">10x10</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="start-game-btn resize-text" onclick="startSequence()" data-i18n="btn_start">게임 시작</button>
+            <a href="/" class="other-game-link resize-text" data-i18n="other_game">다른 게임 고르기</a>
+        </div>
+    </div>
+
+    <!-- 카운트다운 오버레이 -->
+    <div id="overlay-countdown" class="overlay hidden">
+        <div class="modal-content" style="background: transparent; border: none; box-shadow: none;">
+            <div id="countdown-text" style="font-size: clamp(24px, 4vw, 36px); color: var(--primary-gold); margin-bottom: 20px; font-weight: 900; text-align: center;" data-i18n="loading">게임 준비! (이미지 로딩 중...)</div>
+            <img id="countdown-image" src="" alt="악기를 기억하세요" onerror="this.onerror=null; this.src='img/violin.webp';" style="max-height: 40vh; max-width: 100%; object-fit: cover; border: 6px solid var(--primary-gold); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-bottom: 20px; display: none;">
+            <div id="countdown-inst-name" class="hidden" style="font-size: clamp(38px, 5vw, 56px); color: var(--primary-gold); margin-bottom: 15px; font-weight: 950; text-shadow: 0 0 15px rgba(255, 215, 0, 0.6); text-align: center;"></div>
+            <div id="countdown-remember" class="hidden" style="font-size: clamp(24px, 4vw, 36px); color: var(--primary-gold); margin-bottom: 20px; font-weight: 900; text-align: center;" data-i18n="remember_pic">그림을 잘 기억하세요</div>
+            <div id="countdown-number" style="font-size: 150px; font-weight: 950; color: white; text-shadow: 0 10px 30px rgba(0,0,0,0.8);">5</div>
+            <div id="loading-indicator" class="loading-spinner hidden"></div>
+        </div>
+    </div>
+
+    <!-- 종료 화면 (무승부 또는 타임아웃 종료용) -->
+    <div id="overlay-end" class="overlay hidden">
+        <div class="modal-content" style="max-width: 90vw; padding: 35px;">
+            <h1 id="win-title" style="font-size: 60px; margin-bottom: 20px;"></h1>
+            <img id="end-artwork" src="" alt="완성된 악기" onerror="this.onerror=null; this.src='img/violin.webp';">
+            <div id="end-title" style="font-size: 36px; color: #fff; font-weight: 900; margin-bottom: 5px;">악기명</div>
+            <div id="end-category" style="font-size: 24px; color: #aaa; margin-bottom: 30px;">종류</div>
+            <button class="diff-btn resize-text" onclick="document.getElementById('btn-home').click()" data-i18n="btn_retry">다시하기</button>
+        </div>
+    </div>
+
+<script src="instruments_data.js"></script>
+<script>
+    // --- 번역 데이터 구성 ---
+    const i18n = {
+        'ko': {
+            title: "악기 퍼즐킹",
+            tab_wind: "관악기", tab_string: "현악기", tab_percussion: "타악기", tab_random: "랜덤 선택",
+            random_desc: "어떤 악기가 등장할까요?", setting_time: "제한 시간", setting_diff: "난이도",
+            time_1: "1분", time_2: "2분", time_3: "3분", time_5: "5분", time_unlimited: "무제한",
+            btn_start: "게임 시작", red_team: "빨강팀", blue_team: "파랑팀", timer_label: "진행 시간",
+            loading: "게임 준비! (이미지 로딩 중...)", win: "승리!", draw: "무승부", btn_retry: "다시하기",
+            remember_pic: "그림을 잘 기억하세요", quiz_q: "이 악기는 어떤 종류의 악기일까요?",
+            btn_wind: "관악기", btn_string: "현악기", btn_percussion: "타악기",
+            meta_desc: "동작하는 악기 소리와 함께하는 2인용 악기 매치 퍼즐 게임",
+            meta_keywords: "악기, 퍼즐, 게임, 관악기, 현악기, 타악기, 음악 교육"
+        },
+        'en': {
+            title: "Instrument Puzzle King",
+            tab_wind: "Wind", tab_string: "String", tab_percussion: "Percussion", tab_random: "Random",
+            random_desc: "Which instrument will appear?", setting_time: "Time Limit", setting_diff: "Difficulty",
+            time_1: "1 Min", time_2: "2 Min", time_3: "3 Min", time_5: "5 Min", time_unlimited: "Unlimited",
+            btn_start: "Start Game", red_team: "Red Team", blue_team: "Blue Team", timer_label: "Time",
+            loading: "Loading Instrument...", win: "Win!", draw: "Draw", btn_retry: "Retry",
+            remember_pic: "Remember the picture well", quiz_q: "What category is this instrument?",
+            btn_wind: "Wind", btn_string: "String", btn_percussion: "Percussion",
+            meta_desc: "Two-player instrument matchmaking puzzle game with real playing sounds.",
+            meta_keywords: "instruments, puzzle, game, wind, string, percussion, music education"
+        },
+        'zh': {
+            title: "乐器拼图之王",
+            tab_wind: "管乐器", tab_string: "弦乐器", tab_percussion: "打击乐器", tab_random: "随机选择",
+            random_desc: "哪个乐器会出现呢？", setting_time: "时间限制", setting_diff: "难度",
+            time_1: "1分钟", time_2: "2分钟", time_3: "3分钟", time_5: "5分钟", time_unlimited: "无限制",
+            btn_start: "开始游戏", red_team: "红队", blue_team: "蓝队", timer_label: "用时",
+            loading: "乐器加载中...", win: "获胜！", draw: "平局", btn_retry: "再试一次",
+            remember_pic: "请仔细记住图片", quiz_q: "这个乐器属于哪一类？",
+            btn_wind: "管乐器", btn_string: "弦乐器", btn_percussion: "打击乐器",
+            meta_desc: "带有真实乐器演奏声音的双人乐器拼图游戏。",
+            meta_keywords: "乐器, 拼图, 游戏, 管乐器, 弦乐器, 打击乐器, 音乐教育"
+        },
+        'ja': {
+            title: "楽器パズル王",
+            tab_wind: "管楽器", tab_string: "弦楽器", tab_percussion: "打楽器", tab_random: "ランダム",
+            random_desc: "どの楽器が登場するでしょうか？", setting_time: "制限時間", setting_diff: "難易度",
+            time_1: "1分", time_2: "2分", time_3: "3分", time_5: "5分", time_unlimited: "無制限",
+            btn_start: "ゲームスタート", red_team: "赤チーム", blue_team: "青チーム", timer_label: "経過時間",
+            loading: "準備中...", win: "勝利！", draw: "引き分け", btn_retry: "もう一度遊ぶ",
+            remember_pic: "絵をよく覚えてください", quiz_q: "この楽器はどの種類でしょうか？",
+            btn_wind: "管楽器", btn_string: "弦楽器", btn_percussion: "打楽器",
+            meta_desc: "本物の楽器の演奏音が流れる2人用の楽器マッチパズルゲーム。",
+            meta_keywords: "楽器, パズル, ゲーム, 管楽器, 弦楽器, 打楽器, 音楽教育"
+        },
+        'es': {
+            title: "Rey del Rompecabezas de Instrumentos",
+            tab_wind: "Viento", tab_string: "Cuerda", tab_percussion: "Percusión", tab_random: "Aleatorio",
+            random_desc: "¿Qué instrumento aparecerá?", setting_time: "Límite de Tiempo", setting_diff: "Dificultad",
+            time_1: "1 min", time_2: "2 min", time_3: "3 min", time_5: "5 min", time_unlimited: "Sin límite",
+            btn_start: "Comenzar", red_team: "Equipo Rojo", blue_team: "Equipo Azul", timer_label: "Tiempo",
+            loading: "Cargando instrumento...", win: "¡Ganador!", draw: "Empate", btn_retry: "Reintentar",
+            remember_pic: "Recuerda bien la imagen", quiz_q: "¿Qué tipo de instrumento es este?",
+            btn_wind: "Viento", btn_string: "Cuerda", btn_percussion: "Percusión",
+            meta_desc: "Juego de emparejar rompecabezas de instrumentos para dos jugadores con sonidos reales.",
+            meta_keywords: "instrumentos, rompecabezas, juego, viento, cuerda, percusión, educación musical"
+        },
+        'fr': {
+            title: "Roi des Puzzles d'Instruments",
+            tab_wind: "Vent", tab_string: "Corde", tab_percussion: "Percussion", tab_random: "Aléatoire",
+            random_desc: "Quel instrument va apparaître ?", setting_time: "Limite de Temps", setting_diff: "Difficulté",
+            time_1: "1 min", time_2: "2 min", time_3: "3 min", time_5: "5 min", time_unlimited: "Illimité",
+            btn_start: "Jouer", red_team: "Équipe Rouge", blue_team: "Équipe Bleue", timer_label: "Temps",
+            loading: "Chargement de l'instrument...", win: "Gagné !", draw: "Égalité", btn_retry: "Rejouer",
+            remember_pic: "Regardez bien l'image", quiz_q: "De quel type d'instrument s'agit-il ?",
+            btn_wind: "Vent", btn_string: "Corde", btn_percussion: "Percussion",
+            meta_desc: "Jeu de puzzle d'instruments à deux joueurs avec des sons d'instruments réels.",
+            meta_keywords: "instruments, puzzle, jeu, vent, corde, percussion, éducation musicale"
+        },
+        'ru': {
+            title: "Король Пазлов Инструментов",
+            tab_wind: "Духовые", tab_string: "Струнные", tab_percussion: "Ударные", tab_random: "Случайно",
+            random_desc: "Какой инструмент появится?", setting_time: "Лимит времени", setting_diff: "Сложность",
+            time_1: "1 мин", time_2: "2 мин", time_3: "3 мин", time_5: "5 мин", time_unlimited: "Без лимита",
+            btn_start: "Начать игру", red_team: "Красные", blue_team: "Синие", timer_label: "Время",
+            loading: "Загрузка инструмента...", win: "Победа!", draw: "Ничья", btn_retry: "Заново",
+            remember_pic: "Хорошо запомните картинку", quiz_q: "К какому типу относится этот инструмент?",
+            btn_wind: "Духовые", btn_string: "Струнные", btn_percussion: "Ударные",
+            meta_desc: "Пазл-игра для двух игроков на сопоставление музыкальных инструментов с их реальными звуками.",
+            meta_keywords: "инструменты, пазл, игра, духовые, струнные, ударные, музыкальное образование"
+        },
+        'id': {
+            title: "Raja Teka-teki Instrumen",
+            tab_wind: "Tiup", tab_string: "Gesek/Petik", tab_percussion: "Pukul", tab_random: "Acak",
+            random_desc: "Alat musik apa yang akan muncul?", setting_time: "Batas Waktu", setting_diff: "Kesulitan",
+            time_1: "1 Menit", time_2: "2 Menit", time_3: "3 Menit", time_5: "5 Menit", time_unlimited: "Tanpa Batas",
+            btn_start: "Mulai", red_team: "Tim Merah", blue_team: "Tim Biru", timer_label: "Waktu",
+            loading: "Memuat instrumen...", win: "Menang!", draw: "Seri", btn_retry: "Coba Lagi",
+            remember_pic: "Ingat gambar ini baik-baik", quiz_q: "Termasuk jenis alat musik apa ini?",
+            btn_wind: "Tiup", btn_string: "Gesek/Petik", btn_percussion: "Pukul",
+            meta_desc: "Permainan teka-teki mencocokkan instrumen untuk dua pemain dengan suara asli instrumen.",
+            meta_keywords: "alat musik, teka-teki, game, tiup, gesek, pukul, pendidikan musik"
+        },
+        'vi': {
+            title: "Vua Câu Đố Nhạc Cụ",
+            tab_wind: "Nhạc cụ hơi", tab_string: "Nhạc cụ dây", tab_percussion: "Nhạc cụ gõ", tab_random: "Ngẫu nhiên",
+            random_desc: "Nhạc cụ nào sẽ xuất hiện?", setting_time: "Giới hạn thời gian", setting_diff: "Độ khó",
+            time_1: "1 phút", time_2: "2 phút", time_3: "3 phút", time_5: "5 phút", time_unlimited: "Không giới hạn",
+            btn_start: "Bắt đầu", red_team: "Đội Đỏ", blue_team: "Đội Xanh", timer_label: "Thời gian",
+            loading: "Đang tải nhạc cụ...", win: "Thắng!", draw: "Hòa", btn_retry: "Chơi lại",
+            remember_pic: "Hãy nhớ kỹ bức tranh", quiz_q: "Nhạc cụ này thuộc loại nào?",
+            btn_wind: "Nhạc cụ hơi", btn_string: "Nhạc cụ dây", btn_percussion: "Nhạc cụ gõ",
+            meta_desc: "Trò chơi ghép nhạc cụ hai người chơi với âm thanh nhạc cụ chân thực.",
+            meta_keywords: "nhạc cụ, câu đố, trò chơi, hơi, dây, gõ, giáo dục âm nhạc"
+        },
+        'th': {
+            title: "ราชาปริศนาเครื่องดนตรี",
+            tab_wind: "เครื่องเป่า", tab_string: "เครื่องสาย", tab_percussion: "เครื่องตี", tab_random: "สุ่มเลือก",
+            random_desc: "เครื่องดนตรีใดจะปรากฏขึ้น?", setting_time: "จำกัดเวลา", setting_diff: "ความยาก",
+            time_1: "1 นาที", time_2: "2 นาที", time_3: "3 นาที", time_5: "5 นาที", time_unlimited: "ไม่จำกัด",
+            btn_start: "เริ่มเกม", red_team: "ทีมสีแดง", blue_team: "ทีมสีน้ำเงิน", timer_label: "เวลา",
+            loading: "กำลังโหลดเครื่องดนตรี...", win: "ชนะ!", draw: "เสมอ", btn_retry: "เล่นอีกครั้ง",
+            remember_pic: "จดจำรูปภาพให้ดี", quiz_q: "เครื่องดนตรีนี้เป็นประเภทใด?",
+            btn_wind: "เครื่องเป่า", btn_string: "เครื่องสาย", btn_percussion: "เครื่องตี",
+            meta_desc: "เกมจับคู่ปริศนาเครื่องดนตรีสำหรับผู้เล่นสองคนพร้อมเสียงเครื่องดนตรีจริง",
+            meta_keywords: "เครื่องดนตรี, ปริศนา, เกม, เครื่องเป่า, เครื่องสาย, เครื่องตี, ดนตรีศึกษา"
+        },
+        'pt-br': {
+            title: "Rei do Quebra-Cabeça de Instrumentos",
+            tab_wind: "Sopro", tab_string: "Cordas", tab_percussion: "Percussão", tab_random: "Aleatório",
+            random_desc: "Qual instrumento aparecerá?", setting_time: "Limite de Tempo", setting_diff: "Dificuldade",
+            time_1: "1 min", time_2: "2 min", time_3: "3 min", time_5: "5 min", time_unlimited: "Sem limite",
+            btn_start: "Iniciar Jogo", red_team: "Time Vermelho", blue_team: "Time Azul", timer_label: "Tempo",
+            loading: "Carregando instrumento...", win: "Vencedor!", draw: "Empate", btn_retry: "Recomeçar",
+            remember_pic: "Lembre-se bem da imagem", quiz_q: "Que tipo de instrumento é este?",
+            btn_wind: "Sopro", btn_string: "Cordas", btn_percussion: "Percussão",
+            meta_desc: "Jogo de quebra-cabeça de combinação de instrumentos para dois jogadores com sons reais.",
+            meta_keywords: "instrumentos, quebra-cabeça, jogo, sopro, cordas, percussão, educação musical"
+        },
+        'hi': {
+            title: "वाद्य यंत्र पहेली राजा",
+            tab_wind: "सुषिर वाद्य", tab_string: "तत वाद्य", tab_percussion: "अवनद्ध वाद्य", tab_random: "यादृच्छिक",
+            random_desc: "कौन सा वाद्य यंत्र दिखाई देगा?", setting_time: "समय सीमा", setting_diff: "कठिनाई",
+            time_1: "1 मिनट", time_2: "2 मिनट", time_3: "3 मिनट", time_5: "5 मिनट", time_unlimited: "असीमित",
+            btn_start: "खेल शुरू करें", red_team: "लाल टीम", blue_team: "नीली टीम", timer_label: "समय",
+            loading: "वाद्य यंत्र लोड हो रहा है...", win: "जीत!", draw: "बराबरी", btn_retry: "फिर प्रयास करें",
+            remember_pic: "चित्र को अच्छी तरह याद रखें", quiz_q: "यह वाद्य यंत्र किस श्रेणी का है?",
+            btn_wind: "सुषिर वाद्य", btn_string: "तत वाद्य", btn_percussion: "अवनद्ध वाद्य",
+            meta_desc: "वास्तविक वाद्य यंत्र ध्वनियों के साथ दो-खिलाड़ियों के लिए वाद्य यंत्र पहेली खेल।",
+            meta_keywords: "वाद्य यंत्र, पहेली, खेल, सुषिर वाद्य, तत वाद्य, अवनद्ध वाद्य, संगीत शिक्षा"
+        },
+        'bn': {
+            title: "যন্ত্র ধাঁধা রাজা",
+            tab_wind: "সুষির বাদ্য", tab_string: "তারের বাদ্য", tab_percussion: "তবলা/পারকাশন", tab_random: "এলোমেলো",
+            random_desc: "কোন বাদ্যযন্ত্রটি আসবে?", setting_time: "সময় সীমা", setting_diff: "কঠিনতা",
+            time_1: "১ মিনিট", time_2: "২ মিনিট", time_3: "৩ মিনিট", time_5: "৫ মিনিট", time_unlimited: "সীমাহীন",
+            btn_start: "খেলা শুরু", red_team: "লাল দল", blue_team: "নীল দল", timer_label: "সময়",
+            loading: "লোড হচ্ছে...", win: "জয়!", draw: "ড্র", btn_retry: "আবার খেলুন",
+            remember_pic: "ছবিটি ভালো করে মনে রাখুন", quiz_q: "এটি কোন ধরনের বাদ্যযন্ত্র?"
+        },
+        'tr': {
+            title: "Enstrüman Bulmaca Kralı",
+            tab_wind: "Üflemeli", tab_string: "Telliler", tab_percussion: "Vurmalı", tab_random: "Rastgele",
+            random_desc: "Hangi enstrüman görünecek?", setting_time: "Süre Sınırı", setting_diff: "Zorluk",
+            time_1: "1 dk", time_2: "2 dk", time_3: "3 dk", time_5: "5 dk", time_unlimited: "Sınırsız",
+            btn_start: "Oyunu Başlat", red_team: "Kırmızı Takım", blue_team: "Mavi Takım", timer_label: "Süre",
+            loading: "Enstrüman yükleniyor...", win: "Kazandın!", draw: "Berabere", btn_retry: "Tekrar Dene",
+            remember_pic: "Resmi iyi hatırlayın", quiz_q: "Bu ne tür bir enstrümandır?",
+            btn_wind: "Üflemeli", btn_string: "Telliler", btn_percussion: "Vurmalı",
+            meta_desc: "Gerçek enstrüman sesleri içeren iki oyunculu enstrüman eşleştirme bulmaca oyunu.",
+            meta_keywords: "enstrümanlar, bulmaca, oyun, üflemeli, telliler, vurmalı, müzik eğitimi"
+        },
+        'de': {
+            title: "Instrumenten-Puzzle-König",
+            tab_wind: "Blasinstrumente", tab_string: "Saiteninstrumente", tab_percussion: "Schlaginstrumente", tab_random: "Zufällig",
+            random_desc: "Welches Instrument erscheint?", setting_time: "Zeitlimit", setting_diff: "Schwierigkeit",
+            time_1: "1 Min.", time_2: "2 Min.", time_3: "3 Min.", time_5: "5 Min.", time_unlimited: "Unbegrenzt",
+            btn_start: "Spiel starten", red_team: "Rotes Team", blue_team: "Blaues Team", timer_label: "Zeit",
+            loading: "Lade Instrument...", win: "Gewonnen!", draw: "Unentschieden", btn_retry: "Nochmal spielen",
+            remember_pic: "Merke dir das Bild gut", quiz_q: "Welche Instrumentenart ist das?",
+            btn_wind: "Blasinstrumente", btn_string: "Saiteninstrumente", btn_percussion: "Schlaginstrumente",
+            meta_desc: "Zwei-Spieler-Instrumenten-Zuordnungspuzzle-Spiel mit echten Instrumentenklängen.",
+            meta_keywords: "instrumente, puzzle, spiel, blasinstrumente, saiteninstrumente, schlaginstrumente, musikunterricht"
+        },
+        'it': {
+            title: "Re dei Puzzle di Strumenti",
+            tab_wind: "Fiato", tab_string: "Archi", tab_percussion: "Percussioni", tab_random: "Casuale",
+            random_desc: "Quale strumento apparirà?", setting_time: "Tempo Limite", setting_diff: "Difficoltà",
+            time_1: "1 min", time_2: "2 min", time_3: "3 min", time_5: "5 min", time_unlimited: "Senza limiti",
+            btn_start: "Inizia Gioco", red_team: "Squadra Rossa", blue_team: "Squadra Blu", timer_label: "Tempo",
+            loading: "Caricamento strumento...", win: "Hai vinto!", draw: "Pareggio", btn_retry: "Riprova",
+            remember_pic: "Ricorda bene l'immagine", quiz_q: "Di che tipo di strumento si tratta?",
+            btn_wind: "Fiato", btn_string: "Archi", btn_percussion: "Percussioni",
+            meta_desc: "Gioco puzzle di abbinamento strumenti a due giocatori con suoni reali di strumenti.",
+            meta_keywords: "strumenti, puzzle, gioco, fiato, archi, percussioni, educazione musicale"
+        }
+    };
+
+    const toastTranslations = {
+        'ko': '언어가 변경되었습니다.', 'en': 'Language changed.', 'zh': '语言已更改。', 'ja': '言語が変更されました。',
+        'es': 'Idioma cambiado.', 'fr': 'Langue modifiée.', 'de': 'Sprache geändert.', 'it': 'Lingua cambiata.',
+        'pt-br': 'Idioma alterado.', 'ru': 'Язык изменен.', 'hi': 'भाषा बदल दी गई है।', 'bn': 'भाषा परिवर्तन किया হয়েছে।',
+        'id': 'Bahasa telah diubah.', 'vi': 'Ngôn ngữ đã được thay đổi.', 'th': 'เปลี่ยนภาษาเรียบร้อยแล้ว', 'tr': 'Dil değiştirildi.'
+    };
+
+    const instrumentNamesTranslations = {
+        "banjo": {
+            "ko": "밴조", "en": "Banjo", "zh": "班卓琴", "ja": "バンジョー", "es": "Banjo", "fr": "Banjo",
+            "ru": "Банджо", "id": "Banjo", "vi": "Đàn Banjo", "th": "แบนโจ", "pt-br": "Banjo",
+            "hi": "बेंजो", "bn": "ব্যানজো", "tr": "Banjo", "de": "Banjo", "it": "Banjo"
+        },
+        "bass drum": {
+            "ko": "베이스 드럼(큰북)", "en": "Bass Drum", "zh": "大鼓", "ja": "バスドラム", "es": "Bombo", "fr": "Grosse caisse",
+            "ru": "Бас-барабан", "id": "Drum Bass", "vi": "Trống cái", "th": "กลองใหญ่", "pt-br": "Bumbo",
+            "hi": "बास ड्रम", "bn": "বেস ড্রাম", "tr": "Bas Davul", "de": "Große Trommel", "it": "Grancassa"
+        },
+        "bassoon": {
+            "ko": "바순", "en": "Bassoon", "zh": "巴松管", "ja": "ファゴット", "es": "Fagot", "fr": "Basson",
+            "ru": "Фагот", "id": "Fagot", "vi": "Kèn Bassoon", "th": "บาสซูน", "pt-br": "Fagote",
+            "hi": "बैसून", "bn": "বাসুন", "tr": "Fagot", "de": "Fagott", "it": "Fagotto"
+        },
+        "castanets": {
+            "ko": "캐스터네츠", "en": "Castanets", "zh": "响板", "ja": "カスタネット", "es": "Castañuelas", "fr": "Castagnettes",
+            "ru": "Кастаньеты", "id": "Kastanyet", "vi": "Phách nhạc", "th": "กรับสเปน", "pt-br": "Castanholas",
+            "hi": "कास्टनेट्स", "bn": "কাস্ট্যানেটস", "tr": "Kastanyet", "de": "Kastagnetten", "it": "Castagnette"
+        },
+        "cello": {
+            "ko": "첼로", "en": "Cello", "zh": "大提琴", "ja": "チェロ", "es": "Violonchelo", "fr": "Violoncelle",
+            "ru": "Виолончель", "id": "Cello", "vi": "Đàn Cello", "th": "เชลโล", "pt-br": "Violoncelo",
+            "hi": "चेलो", "bn": "চেলো", "tr": "Çello", "de": "Cello", "it": "Violoncello"
+        },
+        "clarinet": {
+            "ko": "클라리넷", "en": "Clarinet", "zh": "单簧管", "ja": "クラリネット", "es": "Clarinete", "fr": "Clarinette",
+            "ru": "Кларнет", "id": "Klarinet", "vi": "Kèn Clarinet", "th": "คลาริเน็ต", "pt-br": "Clarinete",
+            "hi": "क्लैरिनेट", "bn": "ক্ল্যারিনেট", "tr": "Klarnet", "de": "Klarinette", "it": "Clarinetto"
+        },
+        "cowbell": {
+            "ko": "카우벨", "en": "Cowbell", "zh": "牛铃", "ja": "カウベル", "es": "Cencerro", "fr": "Cloche à vache",
+            "ru": "Коубелл", "id": "Cowbell", "vi": "Chuông bò", "th": "คาวเบลล์", "pt-br": "Cincerro",
+            "hi": "काउबेल", "bn": "काউবেল", "tr": "İnek Çanı", "de": "Kuhglocke", "it": "Campanaccio"
+        },
+        "djembe": {
+            "ko": "젬베", "en": "Djembe", "zh": "金贝鼓", "ja": "ジャンベ", "es": "Yembé", "fr": "Djembé",
+            "ru": "Джембе", "id": "Djembe", "vi": "Trống Djembe", "th": "เจมเบ", "pt-br": "Djembe",
+            "hi": "जेम्बे", "bn": "জেম্বে", "tr": "Cembe", "de": "Djembe", "it": "Djembe"
+        },
+        "double-bass": {
+            "ko": "더블베이스", "en": "Double Bass", "zh": "低音提琴", "ja": "コントラバス", "es": "Contrabajo", "fr": "Contrebasse",
+            "ru": "Контрабас", "id": "Double Bass", "vi": "Đàn Double Bass", "th": "ดับเบิลเบส", "pt-br": "Contrabaixo",
+            "hi": "डबल बास", "bn": "ডাবল বেস", "tr": "Kontrbas", "de": "Kontrabass", "it": "Contrabbasso"
+        },
+        "flute": {
+            "ko": "플루트", "en": "Flute", "zh": "长笛", "ja": "フルート", "es": "Flauta", "fr": "Flûte",
+            "ru": "Флейта", "id": "Suling", "vi": "Sáo Tây", "th": "ฟลูต", "pt-br": "Flauta",
+            "hi": "बांसुरी", "bn": "বাঁশি", "tr": "Flüt", "de": "Querflöte", "it": "Flauto"
+        },
+        "guiro": {
+            "ko": "귀로", "en": "Guiro", "zh": "刮壶", "ja": "ギロ", "es": "Güiro", "fr": "Guiro",
+            "ru": "Гуиро", "id": "Guiro", "vi": "Nhạc cụ Guiro", "th": "กีโร", "pt-br": "Recoreco",
+            "hi": "गुइरो", "bn": "গুইরো", "tr": "Guiro", "de": "Güiro", "it": "Guiro"
+        },
+        "guitar": {
+            "ko": "기타", "en": "Guitar", "zh": "吉他", "ja": "ギター", "es": "Guitarra", "fr": "Guitare",
+            "ru": "Гитара", "id": "Gitar", "vi": "Đàn Guitar", "th": "กีตาร์", "pt-br": "Violão",
+            "hi": "गिटार", "bn": "গিটার", "tr": "Gitar", "de": "Gitarre", "it": "Chitarra"
+        },
+        "mandolin": {
+            "ko": "만돌린", "en": "Mandolin", "zh": "曼陀林", "ja": "マンドリン", "es": "Mandolina", "fr": "Mandoline",
+            "ru": "Мандолина", "id": "Mandolin", "vi": "Đàn Mandolin", "th": "แมนโดลิน", "pt-br": "Bandolim",
+            "hi": "मैंडोलिन", "bn": "ম্যান্ডোলিন", "tr": "Mandolin", "de": "Mandoline", "it": "Mandolino"
+        },
+        "oboe": {
+            "ko": "오보에", "en": "Oboe", "zh": "双簧管", "ja": "オーボエ", "es": "Oboe", "fr": "Hautbois",
+            "ru": "Гобой", "id": "Oboe", "vi": "Kèn Oboe", "th": "โอโบ", "pt-br": "Oboé",
+            "hi": "ओबो", "bn": "ওবো", "tr": "Obua", "de": "Oboe", "it": "Oboe"
+        },
+        "saxophone": {
+            "ko": "색소폰", "en": "Saxophone", "zh": "萨克斯管", "ja": "サックス", "es": "Saxofón", "fr": "Saxophone",
+            "ru": "Саксофон", "id": "Saksofon", "vi": "Kèn Saxophone", "th": "แซกโซโฟน", "pt-br": "Saxofone",
+            "hi": "सैक्सोफोन", "bn": "স্যাক্সোফোন", "tr": "Saksafon", "de": "Saxophon", "it": "Sassofono"
+        },
+        "snare drum": {
+            "ko": "스네어 드럼(작은북)", "en": "Snare Drum", "zh": "小军鼓", "ja": "スネアドラム", "es": "Caja", "fr": "Caisse claire",
+            "ru": "Малый барабан", "id": "Snare Drum", "vi": "Trống lẫy", "th": "กลองสแนร์", "pt-br": "Caixa clara",
+            "hi": "स्नेयर ड्रम", "bn": "স্नेয়ার ড্রাম", "tr": "Trampet", "de": "Snare-Drum", "it": "Rullante"
+        },
+        "tambourine": {
+            "ko": "탬버린", "en": "Tambourine", "zh": "铃鼓", "ja": "タンバリン", "es": "Pandereta", "fr": "Tambourin",
+            "ru": "Тамбурин", "id": "Rebana", "vi": "Trống lắc tay", "th": "แทมบูรีน", "pt-br": "Pandeiro",
+            "hi": "डफ़ली", "bn": "খঞ্জনি", "tr": "Tef", "de": "Tamburin", "it": "Tamburello"
+        },
+        "triangle": {
+            "ko": "트라이앵글", "en": "Triangle", "zh": "三角铁", "ja": "トライアングル", "es": "Triángulo", "fr": "Triangle",
+            "ru": "Треугольник", "id": "Triangel", "vi": "Thanh tam giác", "th": "กิ่ง", "pt-br": "Triângulo",
+            "hi": "त्रिकोण", "bn": "त्रिकोण", "tr": "Triangel", "de": "Triangel", "it": "Triangolo"
+        },
+        "trombone": {
+            "ko": "트롬본", "en": "Trombone", "zh": "长号", "ja": "トロンボーン", "es": "Trombón", "fr": "Trombone",
+            "ru": "Тромбон", "id": "Trombon", "vi": "Kèn Trombone", "th": "ทรอมโบน", "pt-br": "Trombone",
+            "hi": "त्रोमबोन", "bn": "ট্রমবোন", "tr": "Trombon", "de": "Posaune", "it": "Trombone"
+        },
+        "trumpet": {
+            "ko": "트럼펫", "en": "Trumpet", "zh": "小号", "ja": "トランペット", "es": "Trompeta", "fr": "Trompette",
+            "ru": "Труба", "id": "Terompet", "vi": "Kèn Trumpet", "th": "ทรัมเป็ต", "pt-br": "Trompete",
+            "hi": "तुरही", "bn": "তূরী", "tr": "Trompet", "de": "Trompete", "it": "Tromba"
+        },
+        "tuba": {
+            "ko": "튜바", "en": "Tuba", "zh": "大号", "ja": "チューバ", "es": "Tuba", "fr": "Tuba",
+            "ru": "Туба", "id": "Tuba", "vi": "Kèn Tuba", "th": "ทูบา", "pt-br": "Tuba",
+            "hi": "ट्यूबा", "bn": "টিউবা", "tr": "Tuba", "de": "Tuba", "it": "Tuba"
+        },
+        "viola": {
+            "ko": "비올라", "en": "Viola", "zh": "中提琴", "ja": "ビオラ", "es": "Viola", "fr": "Alto",
+            "ru": "Альт", "id": "Viola", "vi": "Đàn Viola", "th": "วิโอลา", "pt-br": "Viola",
+            "hi": "वियोला", "bn": "ভায়োলা", "tr": "Viyola", "de": "Bratsche", "it": "Viola"
+        },
+        "violin": {
+            "ko": "바이올린", "en": "Violin", "zh": "小提琴", "ja": "バイオリン", "es": "Violín", "fr": "Violon",
+            "ru": "Скрипка", "id": "Biola", "vi": "Đàn Violin", "th": "ไวโอลิน", "pt-br": "Violino",
+            "hi": "वायलिन", "bn": "ভায়োলিন", "tr": "Keman", "de": "Geige", "it": "Violino"
+        },
+        "wind chimes": {
+            "ko": "윈드 차임", "en": "Wind Chimes", "zh": "风铃", "ja": "ウィンドチャイム", "es": "Campanillas de viento", "fr": "Carillon à vent",
+            "ru": "Музыка ветра", "id": "Klintingan Angin", "vi": "Chuông gió", "th": "กระดิ่งลม", "pt-br": "Sinos de vento",
+            "hi": "विंड चाइम्स", "bn": "উইন্ড চাইমস", "tr": "Rüzgar Çаны", "de": "Windspiel", "it": "Scacciapensieri"
+        },
+        "woodblock": {
+            "ko": "우드블록", "en": "Woodblock", "zh": "木鱼", "ja": "ウッドブロック", "es": "Caja china", "fr": "Wood-block",
+            "ru": "Вудблок", "id": "Woodblock", "vi": "Mõ gỗ", "th": "บล็อกไม้", "pt-br": "Bloco de madeira",
+            "hi": "ウッドブロック", "bn": "উডব্লক", "tr": "Woodblock", "de": "Holzblock", "it": "Woodblock"
+        }
+    };
+
+    // 다른 게임 고르기 다국어 번역 동적 주입
+    const otherGameTranslations = {
+        'ko': '다른 게임 고르기', 'en': 'Select Another Game', 'zh': '选择其他游戏', 'ja': '他のゲームを選ぶ',
+        'es': 'Elegir otro juego', 'fr': 'Choisir un autre jeu', 'de': 'Anderes Spiel wählen', 'it': 'Scegli un outro gioco',
+        'pt-br': 'Escolher outro jogo', 'ru': 'Выбрать другую игру', 'hi': 'दूसरा खेल चुनें', 'bn': 'অন্য খেলা নির্বাচন করুন',
+        'id': 'Pilih game lain', 'vi': 'Chọn trò chơi khác', 'th': 'เลือกเกมอื่น', 'tr': 'Başka bir oyun seç'
+    };
+    Object.keys(i18n).forEach(lang => {
+        if (i18n[lang]) {
+            i18n[lang].other_game = otherGameTranslations[lang] || otherGameTranslations['en'];
+        }
+    });
+
+    const languages = [
+        { code: 'ko', country: 'kr', name: '한국어', enName: 'Korean' },
+        { code: 'en', country: 'us', name: 'English', enName: 'English' },
+        { code: 'zh', country: 'cn', name: '中文 (简体)', enName: 'Chinese (Simplified)' },
+        { code: 'ja', country: 'jp', name: '日本語', enName: 'Japanese' },
+        { code: 'es', country: 'es', name: 'Español', enName: 'Spanish' },
+        { code: 'fr', country: 'fr', name: 'Français', enName: 'French' },
+        { code: 'de', country: 'de', name: 'Deutsch', enName: 'German' },
+        { code: 'it', country: 'it', name: 'Italiano', enName: 'Italian' },
+        { code: 'pt-br', country: 'br', name: 'Português', enName: 'Portuguese (Brazil)' },
+        { code: 'ru', country: 'ru', name: 'Русский', enName: 'Russian' },
+        { code: 'hi', country: 'in', name: 'हिन्दी', enName: 'Hindi' },
+        { code: 'bn', country: 'bd', name: 'বাংলা', enName: 'Bengali' },
+        { code: 'id', country: 'id', name: 'Bahasa Indonesia', enName: 'Indonesian' },
+        { code: 'vi', country: 'vn', name: 'Tiếng Việt', enName: 'Vietnamese' },
+        { code: 'th', country: 'th', name: 'ไทย', enName: 'Thai' },
+        { code: 'tr', country: 'tr', name: 'Türkçe', enName: 'Turkish' }
+    ];
+
+    function detectLanguage() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        
+        if (!lang) {
+            lang = localStorage.getItem('kingsmath_lang');
+        }
+        
+        if (!lang && navigator.language) {
+            const browserLang = navigator.language.toLowerCase();
+            const matchedLang = languages.find(l => browserLang.startsWith(l.code));
+            if (matchedLang) {
+                lang = matchedLang.code;
+            }
+        }
+        
+        if (!lang || !languages.some(l => l.code === lang)) {
+            lang = 'en';
+        }
+        
+        return lang;
+    }
+
+    let currentGlobalLang = detectLanguage();
+
+    function getLocalizedInstrumentName(id, fallbackName) {
+        if (instrumentNamesTranslations[id] && instrumentNamesTranslations[id][currentGlobalLang]) {
+            return instrumentNamesTranslations[id][currentGlobalLang];
+        }
+        return fallbackName;
+    }
+
+    function getLocalizedCategory(category) {
+        const dict = i18n[currentGlobalLang] || i18n['en'];
+        if (category === '관악기') return dict.tab_wind || category;
+        if (category === '현악기') return dict.tab_string || category;
+        if (category === '타악기') return dict.tab_percussion || category;
+        return category;
+    }
+
+    function applyTranslations(langCode) {
+        currentGlobalLang = langCode;
+        
+        const dict = i18n[langCode] || i18n['en'];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) {
+                el.textContent = dict[key];
+            }
+        });
+        
+        document.title = dict.title || "악기 퍼즐킹";
+        
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+            metaDesc = document.createElement('meta');
+            metaDesc.name = "description";
+            document.head.appendChild(metaDesc);
+        }
+        metaDesc.content = dict.meta_desc || "동작하는 악기 소리와 함께하는 2인용 악기 매치 퍼즐 게임";
+        
+        let metaKey = document.querySelector('meta[name="keywords"]');
+        if (!metaKey) {
+            metaKey = document.createElement('meta');
+            metaKey.name = "keywords";
+            document.head.appendChild(metaKey);
+        }
+        metaKey.content = dict.meta_keywords || "악기, 퍼즐, 게임, 관악기, 현악기, 타악기, 음악 교육";
+        
+        const langObj = languages.find(l => l.code === langCode) || languages.find(l => l.code === 'en');
+        const currentFlagImg = document.getElementById('currentFlag');
+        const currentLangSpan = document.getElementById('currentLangName');
+        if (currentFlagImg) currentFlagImg.src = `https://flagcdn.com/w40/${langObj.country}.png`;
+        if (currentLangSpan) currentLangSpan.textContent = langObj.name;
+        
+        // 갤러리 갱신 및 텍스트 리사이즈
+        if (typeof initGallery === 'function') initGallery();
+        adjustTextSizes();
+    }
+
+    function adjustTextSizes() {
+        document.querySelectorAll('.resize-text').forEach(el => {
+            const parent = el.parentElement;
+            if (!parent || parent.clientWidth === 0) return; // 숨겨진 요소는 폰트가 10px로 축소되는 현상 방지
+            
+            el.style.fontSize = ''; 
+            const computedStyle = window.getComputedStyle(el);
+            let fontSize = parseFloat(computedStyle.fontSize);
+            
+            let limit = 0;
+            while (el.scrollWidth > parent.clientWidth && fontSize > 10 && limit < 15) {
+                fontSize -= 1;
+                el.style.fontSize = fontSize + 'px';
+                limit++;
+            }
+        });
+    }
+
+    const triggerBtn = document.getElementById('langTriggerBtn');
+    const modal = document.getElementById('langModal');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const searchInput = document.getElementById('searchInput');
+    const grid = document.getElementById('languageGrid');
+    const noResult = document.getElementById('noResult');
+    const toast = document.getElementById('toastNotification');
+    const toastLangName = document.getElementById('toastLangName');
+    let toastTimeout;
+
+    function renderLanguages(filterText = '') {
+        grid.innerHTML = '';
+        const lowerFilter = filterText.toLowerCase();
+        
+        const filteredLangs = languages.filter(lang => 
+            lang.name.toLowerCase().includes(lowerFilter) || 
+            lang.enName.toLowerCase().includes(lowerFilter) ||
+            lang.code.toLowerCase().includes(lowerFilter)
+        );
+
+        if (filteredLangs.length === 0) {
+            grid.classList.add('hidden');
+            noResult.classList.remove('hidden');
+            noResult.classList.add('flex');
+        } else {
+            grid.classList.remove('hidden');
+            noResult.classList.add('hidden');
+            noResult.classList.remove('flex');
+
+            filteredLangs.forEach(lang => {
+                const isSelected = lang.code === currentGlobalLang;
+                
+                const baseClasses = "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 group relative overflow-hidden";
+                const stateClasses = isSelected 
+                    ? "bg-gray-800 border-yellow-500 ring-1 ring-yellow-500/50" 
+                    : "bg-gray-800/40 border-gray-700 hover:bg-gray-700 hover:border-gray-500";
+
+                const flagUrl = `https://flagcdn.com/w40/${lang.country}.png`;
+
+                const btn = document.createElement('div');
+                btn.className = `${baseClasses} ${stateClasses}`;
+
+                btn.innerHTML = `
+                    <div class="shrink-0 w-8 h-6 rounded overflow-hidden shadow-sm border border-gray-700/50">
+                        <img src="${flagUrl}" alt="${lang.country}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                    </div>
+                    <div class="flex-1 min-w-0 flex flex-col items-start">
+                        <span class="text-sm font-medium text-white truncate w-full ${isSelected ? 'text-yellow-400' : ''}">${lang.name}</span>
+                        <span class="text-xs text-gray-400 truncate w-full">${lang.enName}</span>
+                    </div>
+                    ${isSelected ? '<i class="fa-solid fa-circle-check text-yellow-500 text-lg ml-2"></i>' : ''}
+                `;
+
+                btn.addEventListener('click', () => selectLanguage(lang));
+                grid.appendChild(btn);
+            });
+        }
+    }
+
+    function selectLanguage(lang) {
+        currentGlobalLang = lang.code;
+        localStorage.setItem('kingsmath_lang', lang.code);
+        
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?lang=' + lang.code;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+        
+        applyTranslations(lang.code);
+        closeModal();
+        showToast(lang.name, lang.code);
+    }
+
+    function openModal() {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        renderLanguages(searchInput.value);
+        setTimeout(() => searchInput.focus(), 100);
+    }
+
+    function closeModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function showToast(langName, langCode) {
+        const toastMsg = toastTranslations[langCode] || toastTranslations['en'];
+        document.getElementById('ui-toast').textContent = toastMsg;
+        toastLangName.textContent = langName;
+        
+        toast.classList.add('show');
+        
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    triggerBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+    searchInput.addEventListener('input', (e) => {
+        renderLanguages(e.target.value);
+    });
+
+    // --- 게임 상태 관리 ---
+    let gameState = {
+        gridSize: 3, 
+        p1: { boardId: 'board-p1', pieces: [], domElements: [], isWinner: false, quizActive: false },
+        p2: { boardId: 'board-p2', pieces: [], domElements: [], isWinner: false, quizActive: false },
+        imgData: null, 
+        imgReady: false, 
+        imgRatio: 1, 
+        isPlaying: false, 
+        timeLimit: 180, 
+        timeRemaining: 180, 
+        timeElapsed: 0, 
+        timerIntv: null
+    };
+
+    let selectedTime = 180; 
+    let selectedGrid = 3; 
+    let currentMode = 'random'; 
+    let selectedGalleryItem = null;
+
+    // --- 오디오 엔진 고도화 ---
+    const AudioEngine = {
+        currentAudio: null,
+        stopTimeout: null,
+
+        playStart: function() {
+            // 게임 시작 시 짧은 비프음 효과
+            this.playSynthTone(800, 0.2);
+        },
+        playClack: function() {
+            // 조각 맞추는 소리
+            this.playSynthTone(300, 0.05);
+        },
+        playWrong: function() {
+            // 오답 시 뚜-웅 소리
+            this.playSynthTone(220, 0.4);
+        },
+
+        // Web Audio API를 활용한 효과음 합성
+        playSynthTone: function(freq, duration) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch(e) {
+                console.log("AudioContext not supported or suspended", e);
+            }
+        },
+
+        // 실제 악기 MP3 재생 (최대 10초)
+        playInstrumentSound: function(samplePath) {
+            this.stopInstrumentSound(); // 이미 재생 중인 사운드가 있다면 중지
+            
+            console.log("Playing instrument sample:", samplePath);
+            try {
+                this.currentAudio = new Audio(samplePath);
+                this.currentAudio.volume = 0.8;
+                
+                // 재생 시작
+                this.currentAudio.play().catch(err => {
+                    console.log("Audio playback failed (interaction required):", err);
+                });
+
+                // 정확히 10초 후에 정지 및 페이드아웃 효과 구현
+                this.stopTimeout = setTimeout(() => {
+                    this.fadeOutAndStop();
+                }, 10000); // 10초
+
+            } catch (e) {
+                console.error("Failed to load instrument sound:", e);
+            }
+        },
+
+        // 볼륨 페이드아웃 및 중지
+        fadeOutAndStop: function() {
+            if (!this.currentAudio) return;
+            let vol = this.currentAudio.volume;
+            const fadeInterval = setInterval(() => {
+                if (this.currentAudio && vol > 0.05) {
+                    vol -= 0.05;
+                    this.currentAudio.volume = Math.max(0, vol);
+                } else {
+                    clearInterval(fadeInterval);
+                    this.stopInstrumentSound();
+                }
+            }, 50); // 50ms 마다 0.05씩 볼륨 감소
+        },
+
+        // 즉시 중지
+        stopInstrumentSound: function() {
+            if (this.stopTimeout) {
+                clearTimeout(this.stopTimeout);
+                this.stopTimeout = null;
+            }
+            if (this.currentAudio) {
+                this.currentAudio.pause();
+                this.currentAudio.currentTime = 0;
+                this.currentAudio = null;
+            }
+        }
+    };
+
+    // --- UI 레이아웃 리사이즈 ---
+    const setAppHeight = () => {
+        document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+        if(gameState.isPlaying || document.getElementById('overlay-start').classList.contains('hidden')) resizeBoards();
+    }
+    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('orientationchange', setAppHeight);
+
+    // --- 게임 초기 세팅 ---
+    function selectTime(seconds, btn) {
+        selectedTime = seconds;
+        document.querySelectorAll('#time-options .opt-btn').forEach(b => b.classList.remove('active')); 
+        btn.classList.add('active');
+    }
+    
+    function selectGrid(size, btn) {
+        selectedGrid = size;
+        document.querySelectorAll('#grid-options .opt-btn').forEach(b => b.classList.remove('active')); 
+        btn.classList.add('active');
+    }
+    
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+        currentMode = tabId.replace('tab-', '');
+    }
+
+    // --- 갤러리 렌더링 ---
+    function initGallery() {
+        const windGrid = document.getElementById('gallery-grid-wind');
+        const stringGrid = document.getElementById('gallery-grid-string');
+        const percussionGrid = document.getElementById('gallery-grid-percussion');
+        const koreanGrid = document.getElementById('gallery-grid-korean');
+        
+        windGrid.innerHTML = '';
+        stringGrid.innerHTML = '';
+        percussionGrid.innerHTML = '';
+        if (koreanGrid) koreanGrid.innerHTML = '';
+
+        instrumentsDB.forEach((inst, idx) => {
+            const el = document.createElement('div');
+            const isActive = selectedGalleryItem === inst ? ' active' : (idx === 0 && !selectedGalleryItem ? ' active' : '');
+            if(idx === 0 && !selectedGalleryItem) selectedGalleryItem = inst;
+            
+            el.className = 'gallery-item' + isActive; 
+            el.id = 'gallery-item-' + idx;
+            
+            const localizedName = getLocalizedInstrumentName(inst.id, inst.name);
+            // 이미지 주소 설정 및 엑박 방지 onerror 핸들러 삽입
+            el.innerHTML = `
+                <img src="${inst.image_path}" alt="${localizedName}" onerror="this.onerror=null; this.src='img/violin.webp';">
+                <div class="g-title resize-text">${localizedName}</div>
+            `;
+            el.onclick = () => selectArtwork(idx);
+            
+            if (inst.category === '국악기') {
+                if (koreanGrid) koreanGrid.appendChild(el);
+            } else if (inst.category === '관악기') {
+                windGrid.appendChild(el);
+            } else if (inst.category === '현악기') {
+                stringGrid.appendChild(el);
+            } else {
+                percussionGrid.appendChild(el);
+            }
+        });
+    }
+
+    function selectArtwork(idx) {
+        document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('active'));
+        const target = document.getElementById('gallery-item-' + idx);
+        if(target) target.classList.add('active');
+        selectedGalleryItem = instrumentsDB[idx];
+    }
+
+    // --- 이미지 프리로드 및 게임 로딩 ---
+    function setGameImageAndStart(item) {
+        gameState.imgReady = false; 
+        gameState.imgData = item;
+        const img = new Image();
+
+        // 2초 로딩 타임아웃 감지 및 교체
+        const loadingTimeout = setTimeout(() => {
+            if (!gameState.imgReady && currentMode === 'random') {
+                console.log("⏳ 이미지 로딩 지연. 다른 악기로 교체합니다.");
+                img.src = ""; 
+                let newItem;
+                do {
+                    newItem = instrumentsDB[Math.floor(Math.random() * instrumentsDB.length)];
+                } while (newItem.id === item.id);
+                setGameImageAndStart(newItem);
+            } else if (!gameState.imgReady && currentMode !== 'random') {
+                alert("해당 악기의 이미지를 로드할 수 없습니다. 다른 악기를 선택해 주세요.");
+                document.getElementById('btn-home').click();
+            }
+        }, 2500);
+
+        img.onload = () => {
+            clearTimeout(loadingTimeout);
+            gameState.imgRatio = img.naturalWidth / img.naturalHeight;
+            
+            document.querySelectorAll('.ref-image').forEach(el => el.src = item.image_path);
+            document.getElementById('end-artwork').src = item.image_path;
+            document.getElementById('end-title').textContent = getLocalizedInstrumentName(item.id, item.name);
+            document.getElementById('end-category').textContent = getLocalizedCategory(item.category);
+            
+            gameState.imgReady = true;
+        };
+
+        img.onerror = () => {
+            clearTimeout(loadingTimeout);
+            // 만약 실제 악기 이미지가 없다면 바이올린 이미지를 기본값으로 지정하여 퍼즐을 정상 구동
+            console.log("❌ 이미지 경로 없음. 기본 바이올린 이미지로 자동 우회 처리합니다.");
+            img.src = 'img/violin.webp'; 
+            
+            // 데이터 정보는 원래 악기 정보를 보존하되 이미지 링크만 우회
+            document.querySelectorAll('.ref-image').forEach(el => el.src = 'img/violin.webp');
+            document.getElementById('end-artwork').src = 'img/violin.webp';
+            document.getElementById('end-title').textContent = getLocalizedInstrumentName(item.id, item.name);
+            document.getElementById('end-category').textContent = getLocalizedCategory(item.category);
+            
+            gameState.imgReady = true;
+        };
+
+        img.src = item.image_path;
+    }
+
+    // --- 시작 연출 시퀀스 ---
+    function startSequence() {
+        let targetItem = null;
+        if (currentMode === 'random') {
+            targetItem = instrumentsDB[Math.floor(Math.random() * instrumentsDB.length)];
+        } else { 
+            targetItem = selectedGalleryItem;
+        }
+
+        setGameImageAndStart(targetItem);
+        gameState.gridSize = selectedGrid; 
+        gameState.timeLimit = selectedTime; 
+        gameState.timeRemaining = selectedTime;
+
+        document.getElementById('overlay-start').classList.add('hidden');
+        document.getElementById('langSelectorContainer').style.display = 'none';
+        
+        const countOverlay = document.getElementById('overlay-countdown'); 
+        countOverlay.classList.remove('hidden');
+        
+        let count = 5;
+        const countNum = document.getElementById('countdown-number');
+        const spinner = document.getElementById('loading-indicator');
+        const countText = document.getElementById('countdown-text');
+        const rememberText = document.getElementById('countdown-remember');
+        const countImg = document.getElementById('countdown-image');
+
+        countNum.classList.add('hidden'); 
+        spinner.classList.remove('hidden');
+        countText.classList.remove('hidden');
+        countImg.style.display = 'none';
+        rememberText.classList.add('hidden');
+
+        const checkReadyIntv = setInterval(() => {
+            if(gameState.imgReady) {
+                clearInterval(checkReadyIntv);
+                
+                spinner.classList.add('hidden');
+                countText.classList.add('hidden');
+                
+                countImg.src = gameState.imgData.image_path;
+                countImg.style.display = 'block';
+                
+                // 악기명 노출 및 초기 안내
+                const instNameEl = document.getElementById('countdown-inst-name');
+                instNameEl.textContent = getLocalizedInstrumentName(gameState.imgData.id, gameState.imgData.name);
+                instNameEl.classList.remove('hidden');
+                
+                rememberText.textContent = i18n[currentGlobalLang].remember_pic || "그림을 잘 기억하세요";
+                rememberText.classList.remove('hidden');
+                
+                // 로딩이 완료되면 즉시 고유 악기 음원 재생 (5초 동안)
+                AudioEngine.playInstrumentSound(gameState.imgData.sample_path);
+                
+                countNum.textContent = count;
+                countNum.classList.remove('hidden');
+                
+                const intv = setInterval(() => {
+                    count--;
+                    if (count > 0) { 
+                        countNum.textContent = count; 
+                        
+                        // 3초 이하(카운트 3, 2, 1)일 때는 악기명을 가리고 문구를 그림 집중으로 변경
+
+                        
+                        AudioEngine.playSynthTone(1000, 0.1); 
+                    } else {
+                        clearInterval(intv); 
+                        
+                        // 게임 판 구동 전에 카운트다운용 음악을 강제 정지
+                        AudioEngine.stopInstrumentSound();
+                        
+                        countOverlay.classList.add('hidden'); 
+                        startGame();
+                    }
+                }, 1000);
+            }
+        }, 200);
+    }
+
+    // --- 본격 게임 기동 ---
+    function startGame() {
+        AudioEngine.playStart();
+        initBoard('p1'); 
+        initBoard('p2'); 
+        resizeBoards();
+        
+        gameState.isPlaying = true; 
+        gameState.timeElapsed = 0;
+        document.getElementById('score-p1').textContent = '0%'; 
+        document.getElementById('score-p2').textContent = '0%';
+
+        if(gameState.timerIntv) clearInterval(gameState.timerIntv);
+        const timerFill = document.getElementById('timer-fill'); 
+        const txtTimer = document.getElementById('txt-timer');
+        
+        if (gameState.timeLimit > 0) {
+            timerFill.style.width = '100%'; 
+            timerFill.style.transition = 'width 1s linear';
+            gameState.timerIntv = setInterval(() => {
+                gameState.timeRemaining--;
+                const m = String(Math.floor(gameState.timeRemaining / 60)).padStart(2, '0');
+                const s = String(gameState.timeRemaining % 60).padStart(2, '0');
+                txtTimer.textContent = `${m}:${s}`;
+                const pct = (gameState.timeRemaining / gameState.timeLimit) * 100;
+                timerFill.style.width = `${pct}%`;
+
+                if (gameState.timeRemaining <= 10) {
+                    timerFill.style.background = '#ff0055';
+                    if(gameState.timeRemaining > 0) AudioEngine.playSynthTone(1200, 0.1);
+                } else if (pct <= 30) { 
+                    timerFill.style.background = 'var(--primary-gold)'; 
+                } else { 
+                    timerFill.style.background = 'linear-gradient(90deg, var(--neon-red), var(--primary-gold), #4cd964)'; 
+                }
+
+                if (gameState.timeRemaining <= 0) { 
+                    clearInterval(gameState.timerIntv); 
+                    handleTimeOut(); 
+                }
+            }, 1000);
+        } else {
+            timerFill.style.width = '100%'; 
+            timerFill.style.background = '#4cd964';
+            gameState.timerIntv = setInterval(() => {
+                gameState.timeElapsed++;
+                const m = String(Math.floor(gameState.timeElapsed / 60)).padStart(2, '0');
+                const s = String(gameState.timeElapsed % 60).padStart(2, '0');
+                txtTimer.textContent = `${m}:${s}`;
+            }, 1000);
+        }
+    }
+
+    function autoCompleteBoard(pState) {
+        for(let i=0; i<pState.pieces.length; i++) {
+            pState.pieces[i] = i;
+        }
+        updateVisuals(pState);
+        const isP1 = pState.boardId === 'board-p1';
+        document.getElementById(isP1 ? 'score-p1' : 'score-p2').textContent = '100%';
+    }
+
+    function handleTimeOut() {
+        gameState.isPlaying = false;
+        AudioEngine.stopInstrumentSound();
+        document.querySelectorAll('.quiz-panel').forEach(p => p.remove());
+
+        let p1Score = getProgress(gameState.p1), p2Score = getProgress(gameState.p2);
+        if (gameState.p1.quizActive) p1Score = 100;
+        if (gameState.p2.quizActive) p2Score = 100;
+        
+        if (p1Score > p2Score) { 
+            autoCompleteBoard(gameState.p1);
+            endGameSequence('p1'); 
+        } else if (p2Score > p1Score) { 
+            autoCompleteBoard(gameState.p2);
+            endGameSequence('p2'); 
+        } else { 
+            showOriginalEndOverlay('draw'); 
+        }
+    }
+
+    function resizeBoards() {
+        ['p1', 'p2'].forEach(player => {
+            const pState = gameState[player];
+            const container = document.querySelector(player === 'p1' ? '.left-table' : '.right-table');
+            const maxW = container.clientWidth - 40, maxH = container.clientHeight - 40;
+            const containerRatio = maxW / maxH, imgRatio = gameState.imgRatio; 
+            let boardW, boardH;
+            if (imgRatio > containerRatio) { 
+                boardW = maxW; boardH = maxW / imgRatio; 
+            } else { 
+                boardH = maxH; boardW = maxH * imgRatio; 
+            }
+            const boardEl = document.getElementById(pState.boardId);
+            boardEl.style.width = boardW + 'px'; 
+            boardEl.style.height = boardH + 'px';
+            updateVisuals(pState, boardW, boardH);
+        });
+    }
+
+    // --- 퍼즐 보드 생성 및 조각 분할 ---
+    function initBoard(playerKey) {
+        const pState = gameState[playerKey]; 
+        const boardEl = document.getElementById(pState.boardId);
+        boardEl.innerHTML = ''; 
+        pState.pieces = []; 
+        pState.domElements = []; 
+        pState.isWinner = false; 
+        pState.quizActive = false;
+        
+        const total = gameState.gridSize * gameState.gridSize;
+        for (let i = 0; i < total; i++) pState.pieces.push(i);
+        
+        // 퍼즐 무작위 셔플 (완성 상태 방지)
+        do { 
+            pState.pieces.sort(() => Math.random() - 0.5); 
+        } while (pState.pieces.every((val, i) => val === i));
+
+        for (let pieceId = 0; pieceId < total; pieceId++) {
+            const pieceEl = document.createElement('div');
+            pieceEl.className = 'puzzle-piece'; 
+            pieceEl.dataset.player = playerKey; 
+            pieceEl.dataset.pieceId = pieceId;
+            
+            const origRow = Math.floor(pieceId / gameState.gridSize), origCol = pieceId % gameState.gridSize;
+            const bgPosX = gameState.gridSize > 1 ? (origCol / (gameState.gridSize - 1)) * 100 : 0;
+            const bgPosY = gameState.gridSize > 1 ? (origRow / (gameState.gridSize - 1)) * 100 : 0;
+            
+            pieceEl.style.backgroundImage = `url('${gameState.imgData.image_path}'), url('img/violin.webp')`;
+            pieceEl.style.backgroundSize = `${gameState.gridSize * 100}% ${gameState.gridSize * 100}%`;
+            pieceEl.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+            
+            attachDragEvents(pieceEl, pState);
+            pState.domElements[pieceId] = pieceEl; 
+            boardEl.appendChild(pieceEl);
+        }
+    }
+
+    function updateVisuals(pState, boardW, boardH) {
+        if (!pState.domElements || pState.domElements.length === 0) return;
+        const boardEl = document.getElementById(pState.boardId);
+        const currentBoardW = boardW || boardEl.clientWidth, currentBoardH = boardH || boardEl.clientHeight;
+        const pieceW = currentBoardW / gameState.gridSize, pieceH = currentBoardH / gameState.gridSize;
+        
+        for (let slotIndex = 0; slotIndex < pState.pieces.length; slotIndex++) {
+            const pieceEl = pState.domElements[pState.pieces[slotIndex]];
+            pieceEl.style.width = pieceW + 'px'; 
+            pieceEl.style.height = pieceH + 'px';
+            pieceEl.style.left = ((slotIndex % gameState.gridSize) * pieceW) + 'px'; 
+            pieceEl.style.top = (Math.floor(slotIndex / gameState.gridSize) * pieceH) + 'px';
+            pieceEl.dataset.slotIndex = slotIndex;
+        }
+    }
+
+    // --- 조각 드래그 앤 드롭 제어 ---
+    let activeDrags = {};
+    function attachDragEvents(pieceEl, pState) {
+        pieceEl.addEventListener('pointerdown', (e) => {
+            if (!gameState.isPlaying || pState.quizActive) return; 
+            e.preventDefault();
+            pieceEl.setPointerCapture(e.pointerId); 
+            pieceEl.classList.add('dragging');
+            activeDrags[e.pointerId] = { el: pieceEl, pState: pState, slotIndex: parseInt(pieceEl.dataset.slotIndex), startX: e.clientX, startY: e.clientY };
+        });
+        
+        pieceEl.addEventListener('pointermove', (e) => {
+            const drag = activeDrags[e.pointerId]; 
+            if (!drag) return;
+            drag.el.style.transform = `translate(${e.clientX - drag.startX}px, ${e.clientY - drag.startY}px) scale(1.05)`;
+        });
+        
+        const drop = (e) => {
+            const drag = activeDrags[e.pointerId]; 
+            if (!drag) return;
+            
+            drag.el.releasePointerCapture(e.pointerId); 
+            drag.el.style.transform = ''; 
+            drag.el.classList.remove('dragging');
+            
+            const boardEl = document.getElementById(pState.boardId), rect = boardEl.getBoundingClientRect();
+            let targetCol = Math.max(0, Math.min(gameState.gridSize - 1, Math.floor((e.clientX - rect.left) / (boardEl.clientWidth / gameState.gridSize))));
+            let targetRow = Math.max(0, Math.min(gameState.gridSize - 1, Math.floor((e.clientY - rect.top) / (boardEl.clientHeight / gameState.gridSize))));
+            const tIdx = targetRow * gameState.gridSize + targetCol;
+            
+            if (tIdx !== drag.slotIndex) {
+                const temp = pState.pieces[tIdx]; 
+                pState.pieces[tIdx] = pState.pieces[drag.slotIndex]; 
+                pState.pieces[drag.slotIndex] = temp;
+                AudioEngine.playClack();
+            }
+            
+            updateVisuals(pState); 
+            checkProgress(pState); 
+            delete activeDrags[e.pointerId];
+        };
+        pieceEl.addEventListener('pointerup', drop); 
+        pieceEl.addEventListener('pointercancel', drop);
+    }
+
+    function getProgress(pState) {
+        let correctCount = 0; 
+        for (let i = 0; i < pState.pieces.length; i++) { 
+            if (pState.pieces[i] === i) correctCount++; 
+        }
+        return Math.floor((correctCount / pState.pieces.length) * 100);
+    }
+
+    // --- 퍼즐 100% 매치 검사 ---
+    function checkProgress(pState) {
+        if(pState.isWinner || pState.quizActive) return;
+        const percentage = getProgress(pState), isP1 = pState.boardId === 'board-p1';
+        document.getElementById(isP1 ? 'score-p1' : 'score-p2').textContent = `${percentage}%`;
+        
+        if (percentage === 100) { 
+            pState.quizActive = true;
+            // 퍼즐을 100% 맞추면, 즉시 악기 소리를 10초간 재생
+            AudioEngine.playInstrumentSound(gameState.imgData.sample_path);
+            showInstrumentQuiz(pState);
+        }
+    }
+
+    // --- 악기 종류 맞추기 퀴즈 (관/현/타악기 3지선다) ---
+    function showInstrumentQuiz(pState) {
+        const boardEl = document.getElementById(pState.boardId);
+        const quizPanel = document.createElement('div');
+        quizPanel.className = 'quiz-panel';
+        quizPanel.innerHTML = `
+            <div class="quiz-title">${i18n[currentGlobalLang].quiz_q}</div>
+            <div class="quiz-btn-group">
+                <button class="quiz-btn" onpointerdown="answerQuiz('${pState.boardId}', '관악기')">${i18n[currentGlobalLang].btn_wind}</button>
+                <button class="quiz-btn" onpointerdown="answerQuiz('${pState.boardId}', '현악기')">${i18n[currentGlobalLang].btn_string}</button>
+                <button class="quiz-btn" onpointerdown="answerQuiz('${pState.boardId}', '타악기')">${i18n[currentGlobalLang].btn_percussion}</button>
+            </div>
+        `;
+        boardEl.appendChild(quizPanel);
+    }
+
+    // --- 정오답 판정 및 음악 제어 ---
+    function answerQuiz(boardId, answer) {
+        const isP1 = boardId === 'board-p1';
+        const playerKey = isP1 ? 'p1' : 'p2';
+        const pState = gameState[playerKey];
+
+        // 퀴즈 결과에 관계없이 우선 재생 중인 악기 소리는 정지
+        AudioEngine.stopInstrumentSound();
+
+        if (gameState.imgData.category === answer) {
+            // 정답 시
+            AudioEngine.playStart();
+            const panel = document.querySelector(`#${boardId} .quiz-panel`);
+            if(panel) panel.remove();
+            
+            pState.isWinner = true;
+            
+            // 정답 피드백 효과음 직후 악기 소리를 10초간 재재생
+            setTimeout(() => {
+                AudioEngine.playInstrumentSound(gameState.imgData.sample_path);
+            }, 500);
+
+            endGame(playerKey);
+        } else {
+            // 오답 시
+            AudioEngine.playWrong();
+            
+            // 피드백 팝업 생성
+            const boardEl = document.getElementById(boardId);
+            const feedbackMsg = document.createElement('div');
+            feedbackMsg.className = 'wrong-feedback';
+            const thinkAgainTranslations = {
+                'ko': '다시 생각해 보세요', 'en': 'Think again', 'zh': '请再想想', 'ja': 'もう一度考えてみてください',
+                'es': 'Piénsalo otra vez', 'fr': 'Réfléchissez encore', 'de': 'Denk noch mal nach', 'it': 'Pensaci ancora',
+                'pt-br': 'Pense novamente', 'ru': 'Подумайте еще раз', 'hi': 'फिर से सोचें', 'bn': 'আবার ভাবুন',
+                'id': 'Pikirkan lagi', 'vi': 'Hãy nghĩ lại', 'th': 'ลองคิดดูอีกที', 'tr': 'Tekrar düşünün'
+            };
+            feedbackMsg.textContent = thinkAgainTranslations[currentGlobalLang] || thinkAgainTranslations['en'];
+            boardEl.appendChild(feedbackMsg);
+
+            setTimeout(() => {
+                if (feedbackMsg.parentNode) feedbackMsg.remove();
+            }, 2000);
+            
+            // 퀴즈 패널 제거 및 퀴즈 상태 초기화
+            const panel = document.querySelector(`#${boardId} .quiz-panel`);
+            if (panel) panel.remove();
+            pState.quizActive = false;
+            
+            // 오답 패널티: 0번과 1번 퍼즐조각 셔플하여 완성률 깎음
+            if (pState.pieces.length >= 2) {
+                const temp = pState.pieces[0];
+                pState.pieces[0] = pState.pieces[1];
+                pState.pieces[1] = temp;
+            }
+            
+            updateVisuals(pState);
+            checkProgress(pState);
+        }
+    }
+
+    function endGame(winnerCode) {
+        if (!gameState.isPlaying) return;
+        gameState.isPlaying = false; 
+        
+        if (winnerCode === 'draw') {
+            showOriginalEndOverlay('draw');
+        } else {
+            endGameSequence(winnerCode);
+        }
+    }
+
+    function endGameSequence(winnerCode) {
+        if(gameState.timerIntv) clearInterval(gameState.timerIntv); 
+        document.querySelectorAll('.quiz-panel').forEach(p => p.remove());
+
+        AudioEngine.playSynthTone(880, 0.15);
+        setTimeout(() => AudioEngine.playSynthTone(1320, 0.4), 150);
+        
+        const winnerBoardId = winnerCode === 'p1' ? 'board-p1' : 'board-p2';
+        const winnerPieces = document.querySelectorAll(`#${winnerBoardId} .puzzle-piece`);
+        winnerPieces.forEach(p => p.style.border = 'none'); 
+
+        triggerFireworks(winnerCode);
+
+        setTimeout(() => {
+            showInstrumentInfoOnLoserSide(winnerCode);
+        }, 1000);
+    }
+
+    function triggerFireworks(winnerCode) {
+        const boardId = winnerCode === 'p1' ? 'board-p1' : 'board-p2';
+        const boardEl = document.getElementById(boardId);
+        const rect = boardEl.getBoundingClientRect();
+        
+        const x = (rect.left + rect.width / 2) / window.innerWidth;
+        const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+        const duration = 1000;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 6,
+                angle: 60,
+                spread: 55,
+                origin: { x: x - 0.05, y: y },
+                colors: ['#ff0055', '#ffd700', '#ffffff'],
+                zIndex: 1000
+            });
+            confetti({
+                particleCount: 6,
+                angle: 120,
+                spread: 55,
+                origin: { x: x + 0.05, y: y },
+                colors: ['#00f0ff', '#4cd964', '#ffffff'],
+                zIndex: 1000
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
+
+    // --- 패배팀 화면에 악기 설명 팝업 표시 ---
+    function showInstrumentInfoOnLoserSide(winnerCode) {
+        const loserBoardId = winnerCode === 'p1' ? 'board-p2' : 'board-p1';
+        const loserBoard = document.getElementById(loserBoardId);
+        
+        const infoPanel = document.createElement('div');
+        infoPanel.className = 'info-panel';
+        
+        const item = gameState.imgData;
+        const title = getLocalizedInstrumentName(item.id, item.name);
+        const categoryText = getLocalizedCategory(item.category);
+        const desc = item.description || "";
+        let retryText = i18n[currentGlobalLang].btn_retry;
+
+        infoPanel.innerHTML = `
+            <div class="info-content">
+                <div class="info-title">${title}</div>
+                <div class="info-category">${categoryText}</div>
+                <div class="info-desc">${desc}</div>
+                <button class="diff-btn resize-text mt-4" onclick="document.getElementById('btn-home').click()" style="pointer-events: auto;">
+                    ${retryText}
+                </button>
+            </div>
+        `;
+        
+        loserBoard.appendChild(infoPanel);
+        
+        requestAnimationFrame(() => {
+            infoPanel.classList.add('visible');
+        });
+    }
+
+    function showOriginalEndOverlay(winnerCode) {
+        if(gameState.timerIntv) clearInterval(gameState.timerIntv); 
+        
+        const endOverlay = document.getElementById('overlay-end');
+        const winTitle = document.getElementById('win-title');
+        
+        if (winnerCode === 'draw') {
+            winTitle.textContent = i18n[currentGlobalLang].draw;
+            winTitle.style.webkitTextFillColor = '#ffffff';
+        }
+        
+        endOverlay.classList.remove('hidden');
+    }
+
+    document.getElementById('btn-home').addEventListener('click', () => {
+        AudioEngine.stopInstrumentSound(); // 사운드 강제 정지
+        const infoPanels = document.querySelectorAll('.info-panel');
+        infoPanels.forEach(p => p.remove());
+
+        gameState.isPlaying = false;
+        if(gameState.timerIntv) clearInterval(gameState.timerIntv);
+        document.getElementById('overlay-start').classList.remove('hidden');
+        document.getElementById('overlay-end').classList.add('hidden');
+        document.getElementById('overlay-countdown').classList.add('hidden');
+        
+        document.getElementById('board-p1').innerHTML = '';
+        document.getElementById('board-p2').innerHTML = '';
+        document.getElementById('score-p1').textContent = '0%';
+        document.getElementById('score-p2').textContent = '0%';
+
+        // 다국어 선택기 버튼 다시 표시
+        document.getElementById('langSelectorContainer').style.display = 'block';
+    });
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) { 
+            document.documentElement.requestFullscreen().catch(err => console.log(err)); 
+        } else if (document.exitFullscreen) { 
+            document.exitFullscreen(); 
+        }
+    }
+
+    // --- 다국어 강제 로딩 및 갤러리 기동 ---
+    applyTranslations(currentGlobalLang);
+    setAppHeight();
+</script>
+</body>
+</html>

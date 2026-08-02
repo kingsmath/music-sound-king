@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5YW0T2C109"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-5YW0T2C109');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>악기소리킹 - 전자칠판 1~6인용 악기 퀴즈 & 소리 도감</title>
+    <meta name="description" content="전자칠판 전용 1~6인용 4지선다 악기소리킹 퀴즈 게임 & 악기 소리 도감! 동서양 악기 37종 수록">
+    <meta name="keywords" content="악기소리킹, 악기소리, 국악기, 악기퀴즈, 음악교육, 전자칠판게임, 6인용게임">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Outfit:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --primary-gold: #ffd700;
+            --bg-dark: #090a0f;
+            --panel-bg: rgba(18, 22, 34, 0.9);
+            --p1-color: #ff3366;
+            --p2-color: #3399ff;
+            --p3-color: #00cc66;
+            --p4-color: #ff9900;
+            --p5-color: #cc33ff;
+            --p6-color: #00e5ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #151824 0%, #06070a 100%);
+            color: #ffffff;
+            font-family: 'Noto Sans KR', 'Outfit', sans-serif;
+            font-weight: 500;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(10, 12, 16, 0.8); }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
+
+        /* Glassmorphism Containers */
+        .glass-panel {
+            background: rgba(18, 22, 34, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fff7ad 0%, #ffa900 50%, #e67e22 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .purple-gradient-btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+            box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4);
+            transition: all 0.2s ease-out;
+        }
+        .purple-gradient-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(147, 51, 234, 0.6);
+        }
+
+        /* Option Card for 4-Choice Tiles */
+        .option-card {
+            background: rgba(28, 34, 52, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1rem;
+            transition: all 0.15s ease-out;
+            cursor: pointer;
+        }
+        .option-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-gold);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.25);
+            background: rgba(40, 48, 74, 0.95);
+        }
+        .option-card:active {
+            transform: scale(0.97);
+        }
+
+        .option-card.correct {
+            border-color: #10b981 !important;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(5, 150, 105, 0.6) 100%) !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.6) !important;
+            animation: pulse-correct 0.5s ease-out;
+        }
+        .option-card.wrong {
+            border-color: #ef4444 !important;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(220, 38, 38, 0.6) 100%) !important;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.6) !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes pulse-correct {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        /* Sound Pulse Wave Animation */
+        .sound-wave-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        .sound-wave-btn.playing::after {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            border: 4px solid var(--primary-gold);
+            animation: ripple 1.2s infinite ease-out;
+            opacity: 0;
+        }
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 0.9; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        /* Equalizer Bars */
+        .eq-bar {
+            width: 4px;
+            height: 18px;
+            background-color: var(--primary-gold);
+            border-radius: 2px;
+            animation: eqBounce 0.8s infinite ease-in-out alternate;
+        }
+        .eq-bar:nth-child(2) { animation-delay: 0.2s; }
+        .eq-bar:nth-child(3) { animation-delay: 0.4s; }
+        .eq-bar:nth-child(4) { animation-delay: 0.1s; }
+        .eq-bar:nth-child(5) { animation-delay: 0.3s; }
+        @keyframes eqBounce {
+            0% { height: 6px; }
+            100% { height: 28px; }
+        }
+
+        /* Player Colors & Column Cards */
+        .p-col-1 { border-top: 4px solid var(--p1-color); }
+        .p-col-2 { border-top: 4px solid var(--p2-color); }
+        .p-col-3 { border-top: 4px solid var(--p3-color); }
+        .p-col-4 { border-top: 4px solid var(--p4-color); }
+        .p-col-5 { border-top: 4px solid var(--p5-color); }
+        .p-col-6 { border-top: 4px solid var(--p6-color); }
+
+        .p-badge-1 { background: var(--p1-color); color: #fff; }
+        .p-badge-2 { background: var(--p2-color); color: #fff; }
+        .p-badge-3 { background: var(--p3-color); color: #fff; }
+        .p-badge-4 { background: var(--p4-color); color: #fff; }
+        .p-badge-5 { background: var(--p5-color); color: #fff; }
+        .p-badge-6 { background: var(--p6-color); color: #fff; }
+
+        /* Modal backdrop transition */
+        .modal-fade {
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+        .modal-fade.hidden {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            color: #0b0c10;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        }
+
+        /* 전자칠판 풀스크린 퀴즈 모드: 게임 진행 중에는 전체 화면을 게임판으로만 사용 (뒷배경 스크롤 방지) */
+        body.quiz-fullscreen {
+            overflow: hidden;
+        }
+
+        /* 참고.html 스타일 차용: 화면 왼쪽/오른쪽 세로 중앙에 항상 떠 있는 홈/전체화면 버튼 */
+        .side-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.55);
+            border: 2px solid rgba(255, 215, 0, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            cursor: pointer;
+            z-index: 9999;
+            color: #fff;
+            transition: 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .side-btn:active {
+            transform: translateY(-50%) scale(0.9);
+            background: rgba(0, 0, 0, 0.85);
+        }
+        .side-btn.left-btn { left: 10px; }
+        .side-btn.right-btn { right: 10px; }
+        @media (max-width: 900px) {
+            .side-btn { width: 36px; height: 36px; font-size: 1.05rem; opacity: 0.75; }
+        }
+
+        /* 남은 시간이 얼마 없을 때 타이머 뱃지 강조 */
+        .timer-urgent {
+            animation: pulse-correct 0.6s infinite;
+        }
+
+        /* 정답 공개 시 화면 정 가운데 크게 뜨는 O(정답)/X(오답) 표시 */
+        .result-mark-correct {
+            color: #34d399;
+            text-shadow: 0 0 12px rgba(0,0,0,0.9), 0 0 30px rgba(52, 211, 153, 0.9), 0 0 60px rgba(52, 211, 153, 0.6);
+            animation: result-mark-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .result-mark-wrong {
+            color: #f87171;
+            text-shadow: 0 0 12px rgba(0,0,0,0.9), 0 0 30px rgba(248, 113, 113, 0.9), 0 0 60px rgba(248, 113, 113, 0.6);
+            animation: result-mark-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes result-mark-pop {
+            0% { transform: scale(0.3); opacity: 0; }
+            60% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ----------------------------------------------------------------
+           첫 화면(설정 카드) 전용 유동(fluid) 크기 조절
+           가로폭 기준 Tailwind sm: 브레이크포인트만으로는 "가로는 넓지만 세로는 짧은"
+           전자칠판/태블릿 화면에서 카드가 넘쳐 스크롤이 생기는 문제를 해결할 수 없어서,
+           뷰포트 "높이(vh)" 기준 clamp()로 패딩/폰트/여백을 흐르듯 줄어들게 만듦.
+           (선택자에 #view-game-setup 을 붙여 Tailwind 유틸리티보다 항상 우선 적용되게 함)
+           ---------------------------------------------------------------- */
+        /* ----------------------------------------------------------------
+           첫 화면(설정 카드) 전용 유동(fluid) 크기 조절
+           가로폭 기준 Tailwind sm: 브레이크포인트만으로는 "가로는 넓지만 세로는 짧은"
+           전자칠판/태블릿 화면에서 카드가 넘쳐 스크롤이 생기는 문제를 해결할 수 없어서,
+           뷰포트 "높이(vh)" 기준 clamp()로 패딩/폰트/여백을 흐르듯 줄어들게 만듦.
+           (선택자에 #view-game-setup 을 붙여 Tailwind 유틸리티보다 항상 우선 적용되게 함)
+           ---------------------------------------------------------------- */
+        #view-game-setup.setup-fluid { padding: clamp(0.5rem, 1.8vh, 1.3rem); }
+        #view-game-setup .su-badge { padding: clamp(1px, 0.4vh, 4px) clamp(8px, 1.4vw, 12px); margin-bottom: clamp(2px, 0.5vh, 6px); font-size: clamp(10px, 1.3vh, 13px); }
+        #view-game-setup .su-title-row { gap: clamp(4px, 0.8vw, 8px); margin-bottom: clamp(1px, 0.3vh, 4px); }
+        #view-game-setup .su-icon { width: clamp(20px, 3vh, 32px); height: clamp(20px, 3vh, 32px); font-size: clamp(10px, 1.5vh, 14px); }
+        #view-game-setup .su-title { font-size: clamp(1rem, 2.5vh, 1.45rem); }
+        #view-game-setup .su-subtitle { font-size: clamp(9px, 1.4vh, 13px); margin-bottom: clamp(3px, 0.8vh, 8px); }
+        #view-game-setup .su-groups { gap: clamp(4px, 0.8vh, 8px); margin-bottom: clamp(4px, 0.8vh, 8px); }
+        #view-game-setup .su-label { font-size: clamp(9px, 1.3vh, 12px); margin-bottom: clamp(1px, 0.3vh, 4px); gap: 5px; }
+        #view-game-setup .su-btn { padding-top: clamp(3px, 0.65vh, 7px); padding-bottom: clamp(3px, 0.65vh, 7px); font-size: clamp(9px, 1.3vh, 12px); }
+        #view-game-setup .su-bottom { gap: clamp(3px, 0.6vh, 7px); }
+        #view-game-setup .su-gallery-btn { padding-top: clamp(3px, 0.7vh, 7px); padding-bottom: clamp(3px, 0.7vh, 7px); font-size: clamp(9px, 1.3vh, 13px); }
+        #view-game-setup .su-start-btn { padding-top: clamp(5px, 1.1vh, 10px); padding-bottom: clamp(5px, 1.1vh, 10px); font-size: clamp(11px, 1.8vh, 16px); }
+        #view-game-setup .su-links { font-size: clamp(9px, 1.2vh, 11px); gap: 16px; margin-top: clamp(2px, 0.4vh, 6px); }
+    </style>
+</head>
+
+<body class="flex flex-col justify-between h-screen overflow-hidden">
+
+    <!-- 항상 떠 있는 홈 버튼: 확인창 없이 즉시 첫 화면으로 이동 -->
+    <div id="btn-home" onclick="goHomeInstantly()" class="side-btn left-btn" title="첫 화면으로">🏠</div>
+    <!-- 항상 떠 있는 전체화면 토글 버튼 (전자칠판에서 브라우저 주소창까지 완전히 가리고 싶을 때) -->
+    <div id="btn-fullscreen-toggle" onclick="toggleFullscreen()" class="side-btn right-btn" title="전체화면">⛶</div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-2 flex flex-col justify-center overflow-hidden">
+
+        <!-- 1. QUIZ GAME SETUP VIEW (뷰포트 "높이" 기준 clamp()로 흐르듯 크기 조절 -> 어떤 해상도든 스크롤 없이 한 화면에 표시) -->
+        <section id="view-game-setup" class="setup-fluid w-full max-w-3xl mx-auto glass-panel rounded-3xl text-center relative overflow-hidden border border-yellow-500/30">
+            <div class="absolute -right-24 -top-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-24 -bottom-24 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="su-badge inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">
+                👑 전자칠판 전용 1~6인용 4지선다 대결
+            </div>
+
+            <div class="su-title-row flex items-center justify-center">
+                <div class="su-icon rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-amber-500/30 flex-none">
+                    <i class="fa-solid fa-music"></i>
+                </div>
+                <h2 class="su-title font-extrabold gold-gradient-text leading-tight">악기소리킹 퀴즈 게임</h2>
+            </div>
+            <p class="su-subtitle text-slate-300">신나는 악기 소리와 그림을 보고 4지선다 중 정답을 맞혀보세요!</p>
+
+            <!-- Settings Options -->
+            <div class="su-groups flex flex-col text-left">
+
+                <!-- Player Count Choice (1인용 ~ 6인용) -->
+                <div>
+                    <label class="su-label flex items-center text-amber-300 font-bold">
+                        <i class="fa-solid fa-users"></i>참여 인원 <span class="text-slate-400 font-medium">(전자칠판 1~6인용)</span>
+                    </label>
+                    <div class="grid grid-cols-6 gap-1.5 sm:gap-2" id="player-count-group">
+                        <button type="button" data-pcount="1" onclick="selectPlayerCount(1)" class="p-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-xs sm:text-sm text-center transition-all">1인</button>
+                        <button type="button" data-pcount="2" onclick="selectPlayerCount(2)" class="p-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-xs sm:text-sm text-center transition-all">2인</button>
+                        <button type="button" data-pcount="3" onclick="selectPlayerCount(3)" class="p-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-xs sm:text-sm text-center transition-all">3인</button>
+                        <button type="button" data-pcount="4" onclick="selectPlayerCount(4)" class="p-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-xs sm:text-sm text-center transition-all">4인</button>
+                        <button type="button" data-pcount="5" onclick="selectPlayerCount(5)" class="p-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-xs sm:text-sm text-center transition-all">5인</button>
+                        <button type="button" data-pcount="6" onclick="selectPlayerCount(6)" class="p-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-amber-400 bg-amber-500/20 font-extrabold text-xs sm:text-sm text-center text-amber-300 transition-all">6인</button>
+                    </div>
+                </div>
+
+                <!-- Question Count Choice (4, 8, 10, 12) -->
+                <div>
+                    <label class="su-label flex items-center text-amber-300 font-bold">
+                        <i class="fa-solid fa-list-ol"></i>문제 수 선택
+                    </label>
+                    <div class="grid grid-cols-4 gap-1.5 sm:gap-2" id="question-count-group">
+                        <button type="button" data-count="4" onclick="selectQuestionCount(4)" class="q-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-xs sm:text-base text-center transition-all">4문제</button>
+                        <button type="button" data-count="8" onclick="selectQuestionCount(8)" class="q-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-amber-400 bg-amber-500/20 font-extrabold text-xs sm:text-base text-center text-amber-300 transition-all">8문제</button>
+                        <button type="button" data-count="10" onclick="selectQuestionCount(10)" class="q-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-xs sm:text-base text-center transition-all">10문제</button>
+                        <button type="button" data-count="12" onclick="selectQuestionCount(12)" class="q-count-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-xs sm:text-base text-center transition-all">12문제</button>
+                    </div>
+                </div>
+
+                <!-- Quiz Mode (이름+그림 혼합이 제일 앞으로 위치 및 기본 선택!) -->
+                <div>
+                    <label class="su-label flex items-center text-amber-300 font-bold">
+                        <i class="fa-solid fa-sliders"></i>퀴즈 형식
+                    </label>
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2" id="mode-group">
+                        <button type="button" data-mode="mixed" onclick="selectQuizMode('mixed')" title="문제마다 이름 맞추기/그림 맞추기 중 랜덤으로 출제됩니다" class="mode-btn su-btn rounded-xl bg-slate-800/90 border-2 border-amber-400 bg-amber-500/20 font-extrabold text-[11px] sm:text-sm text-amber-300 transition-all leading-tight">🔀 혼합<span class="hidden sm:inline"> (기본)</span></button>
+                        <button type="button" data-mode="name" onclick="selectQuizMode('name')" title="그림 또는 소리가 먼저 나오고 5초 후 나머지가 나옵니다. 보기는 악기 이름(글자)!" class="mode-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-[11px] sm:text-sm transition-all leading-tight">📝 이름 맞추기</button>
+                        <button type="button" data-mode="image" onclick="selectQuizMode('image')" title="이름(제목) 또는 소리가 먼저 나오고 5초 후 나머지가 나옵니다. 보기는 악기 그림!" class="mode-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-[11px] sm:text-sm transition-all leading-tight">🖼️ 그림 맞추기</button>
+                    </div>
+                </div>
+
+                <!-- Category Choice (전체, 서양 악기, 국악기) -->
+                <div>
+                    <label class="su-label flex items-center text-amber-300 font-bold">
+                        <i class="fa-solid fa-guitar"></i>악기 종류 범위
+                    </label>
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2" id="category-filter-group">
+                        <button type="button" data-cat="all" onclick="selectCategory('all')" class="cat-btn su-btn rounded-xl bg-slate-800/90 border-2 border-amber-400 bg-amber-500/20 font-extrabold text-[11px] sm:text-sm text-amber-300 transition-all">전체 (37종)</button>
+                        <button type="button" data-cat="western" onclick="selectCategory('western')" class="cat-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-[11px] sm:text-sm transition-all">서양 (25종)</button>
+                        <button type="button" data-cat="korean" onclick="selectCategory('korean')" class="cat-btn su-btn rounded-xl bg-slate-800/90 border-2 border-slate-600 hover:border-amber-400 font-bold text-[11px] sm:text-sm transition-all">국악기 (12종)</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 악기 소리 도감 (게임 시작하기 버튼 바로 위) & Start Game Button & Other Links -->
+            <div class="su-bottom flex flex-col items-center">
+                <button onclick="switchView('gallery')" class="su-gallery-btn w-full rounded-xl font-bold tracking-wide text-amber-300 bg-slate-800/90 border-2 border-amber-500/40 hover:border-amber-400 hover:bg-slate-800 flex items-center justify-center gap-2 transition-all">
+                    <i class="fa-solid fa-icons"></i>
+                    <span>악기 소리 도감 보기</span>
+                </button>
+
+                <button onclick="startQuizGame()" class="su-start-btn purple-gradient-btn w-full rounded-2xl font-extrabold tracking-wide text-white flex items-center justify-center gap-2 sm:gap-3">
+                    <i class="fa-solid fa-play"></i>
+                    <span>악기소리킹 게임 시작하기</span>
+                </button>
+
+                <div class="su-links flex items-center justify-center">
+                    <a href="kingmh_inst/index.html" target="_blank" class="text-slate-400 hover:text-emerald-300 font-semibold underline underline-offset-4 transition-colors flex items-center gap-1">
+                        <i class="fa-solid fa-puzzle-piece"></i>악기퍼즐킹
+                    </a>
+                    <button onclick="window.location.href='http://킹수학.com'" class="text-slate-400 hover:text-yellow-300 font-semibold underline underline-offset-4 transition-colors">
+                        <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>다른 게임 고르기
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 2. IN-GAME MULTIPLAYER QUIZ VIEW (전자칠판 전체화면 모드: 상단 50% 문제 / 하단 50% 보기) -->
+        <section id="view-quiz-playing" class="hidden fixed inset-0 z-50 w-screen h-screen h-[100dvh] bg-[#06070a] flex flex-col overflow-hidden">
+
+            <!-- TOP ZONE: 문제 영역, 화면 높이의 정확히 절반으로 고정 -->
+            <div class="h-1/2 flex-none flex flex-col overflow-hidden border-b-2 border-yellow-500/30">
+
+                <!-- Top Bar: 문제 번호 / 모드 뱃지 / 버튼들 -->
+                <div class="flex-none flex flex-wrap items-center justify-between gap-2 px-3 sm:px-6 py-2 sm:py-3 bg-slate-950/70 border-b border-slate-700/60">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <span class="px-3 sm:px-4 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-sm sm:text-lg border border-amber-500/40">
+                            문제 <span id="quiz-current-num">1</span> / <span id="quiz-total-num">8</span>
+                        </span>
+                        <span id="player-mode-badge" class="px-2.5 sm:px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-bold text-xs sm:text-sm border border-purple-500/40">
+                            👥 6인용 전자칠판 모드
+                        </span>
+                        <!-- 문제당 전체 제한시간 30초 -->
+                        <span id="question-timer-badge" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-slate-800 text-amber-300 font-black text-sm sm:text-lg border border-slate-600">
+                            <i class="fa-solid fa-stopwatch text-xs sm:text-sm"></i>
+                            <span id="question-timer-num">30</span>
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="exitQuizToSetup()" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700">
+                            <i class="fa-solid fa-xmark mr-1"></i>그만두기
+                        </button>
+                        <button id="btn-reveal-answer" onclick="revealAnswers()" class="hidden bg-gradient-to-r from-emerald-500 to-teal-500 px-3 sm:px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm text-white flex items-center gap-2 animate-pulse shadow-lg shadow-emerald-500/30">
+                            <i class="fa-solid fa-lock-open"></i>
+                            <span>정답 공개!</span>
+                        </button>
+                        <button id="btn-next-question" onclick="nextQuestion()" class="hidden purple-gradient-btn px-3 sm:px-5 py-1.5 rounded-lg font-bold text-xs sm:text-sm text-white flex items-center gap-2">
+                            <span>다음 문제</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="flex-none w-full bg-slate-800 h-1.5 sm:h-2">
+                    <div id="quiz-progress-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full w-0 transition-all duration-300"></div>
+                </div>
+
+                <!-- 문제 프롬프트 영역: 좌/우 2개로 분할되어 전자칠판 양옆에 선 학생들 모두가 문제 그림/힌트를 쉽게 볼 수 있음 -->
+                <div class="flex-1 min-h-0 flex flex-col items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 text-center overflow-hidden w-full">
+
+                    <h3 id="question-text" class="flex-none text-sm sm:text-lg lg:text-xl font-bold text-white">
+                        소리를 듣거나 그림을 보고 알맞은 악기를 고르세요!
+                    </h3>
+                    <p class="flex-none text-[10px] sm:text-xs text-emerald-300 font-bold">
+                        <i class="fa-solid fa-bolt mr-1"></i>빨리 맞출수록 보너스 점수 UP! (1등부터 순서대로 더 높은 점수)
+                    </p>
+
+                    <!-- 좌측 / 우측 2개 대칭 프롬프트 영역 -->
+                    <div class="flex-1 min-h-0 w-full grid grid-cols-2 gap-2 sm:gap-4 items-center justify-center">
+
+                        <!-- [1] 좌측 프롬프트 박스 -->
+                        <div class="h-full bg-slate-900/60 rounded-xl border border-slate-700/50 p-1 sm:p-2 flex items-center justify-evenly gap-1 sm:gap-3">
+                            <!-- 힌트 카운트다운 (좌) -->
+                            <div class="flex-none w-8 sm:w-14 flex items-center justify-center">
+                                <div id="hint-countdown-wrap-1" class="invisible flex flex-col items-center gap-0.5">
+                                    <span class="text-amber-300/90 text-[8px] sm:text-xs font-bold leading-tight">다음<br>힌트</span>
+                                    <span id="hint-countdown-num-1" class="text-lg sm:text-3xl font-black text-amber-300 leading-none" style="text-shadow:0 0 15px rgba(255,215,0,0.6);">5</span>
+                                </div>
+                            </div>
+                            <!-- 메인 비주얼 (좌) -->
+                            <div id="prompt-main-visual-1" class="flex-none w-[18vh] h-[18vh] max-w-[170px] max-h-[170px] min-w-[90px] min-h-[90px] rounded-xl overflow-hidden border-2 border-amber-400/80 shadow-md bg-slate-950/80 flex items-center justify-center relative">
+                                <div id="prompt-visual-placeholder-1" class="flex flex-col items-center gap-1 text-slate-500">
+                                    <i class="fa-solid fa-circle-question text-2xl sm:text-4xl"></i>
+                                </div>
+                                <img id="prompt-image-1" src="" alt="문제 악기" class="hidden absolute inset-0 w-full h-full object-cover">
+                                <span id="prompt-text-1" class="hidden px-1 text-base sm:text-3xl font-extrabold gold-gradient-text tracking-wide text-center"></span>
+                            </div>
+                            <!-- 소리 재생 버튼 (좌) -->
+                            <div class="flex-none w-8 sm:w-14 flex items-center justify-center">
+                                <div id="prompt-audio-container-1" class="invisible flex flex-col items-center gap-0.5">
+                                    <button id="btn-play-prompt-sound-1" onclick="playCurrentPromptSound()" class="sound-wave-btn w-9 h-9 sm:w-13 sm:h-13 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black text-sm sm:text-xl shadow-md shadow-amber-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                    <div id="audio-eq-bars-1" class="invisible flex items-end gap-0.5 h-3 sm:h-4">
+                                        <div class="eq-bar"></div>
+                                        <div class="eq-bar"></div>
+                                        <div class="eq-bar"></div>
+                                        <div class="eq-bar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- [2] 우측 프롬프트 박스 (동일 복제) -->
+                        <div class="h-full bg-slate-900/60 rounded-xl border border-slate-700/50 p-1 sm:p-2 flex items-center justify-evenly gap-1 sm:gap-3">
+                            <!-- 힌트 카운트다운 (우) -->
+                            <div class="flex-none w-8 sm:w-14 flex items-center justify-center">
+                                <div id="hint-countdown-wrap-2" class="invisible flex flex-col items-center gap-0.5">
+                                    <span class="text-amber-300/90 text-[8px] sm:text-xs font-bold leading-tight">다음<br>힌트</span>
+                                    <span id="hint-countdown-num-2" class="text-lg sm:text-3xl font-black text-amber-300 leading-none" style="text-shadow:0 0 15px rgba(255,215,0,0.6);">5</span>
+                                </div>
+                            </div>
+                            <!-- 메인 비주얼 (우) -->
+                            <div id="prompt-main-visual-2" class="flex-none w-[18vh] h-[18vh] max-w-[170px] max-h-[170px] min-w-[90px] min-h-[90px] rounded-xl overflow-hidden border-2 border-amber-400/80 shadow-md bg-slate-950/80 flex items-center justify-center relative">
+                                <div id="prompt-visual-placeholder-2" class="flex flex-col items-center gap-1 text-slate-500">
+                                    <i class="fa-solid fa-circle-question text-2xl sm:text-4xl"></i>
+                                </div>
+                                <img id="prompt-image-2" src="" alt="문제 악기" class="hidden absolute inset-0 w-full h-full object-cover">
+                                <span id="prompt-text-2" class="hidden px-1 text-base sm:text-3xl font-extrabold gold-gradient-text tracking-wide text-center"></span>
+                            </div>
+                            <!-- 소리 재생 버튼 (우) -->
+                            <div class="flex-none w-8 sm:w-14 flex items-center justify-center">
+                                <div id="prompt-audio-container-2" class="invisible flex flex-col items-center gap-0.5">
+                                    <button id="btn-play-prompt-sound-2" onclick="playCurrentPromptSound()" class="sound-wave-btn w-9 h-9 sm:w-13 sm:h-13 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black text-sm sm:text-xl shadow-md shadow-amber-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                    <div id="audio-eq-bars-2" class="invisible flex items-end gap-0.5 h-3 sm:h-4">
+                                        <div class="eq-bar"></div>
+                                        <div class="eq-bar"></div>
+                                        <div class="eq-bar"></div>
+                                        <div class="eq-bar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM ZONE: 참여 인원 전체가 화면 하단 절반을 빈틈없이 꽉 채우는 보기 영역 (전자칠판 1~6열 분할, 참고.html arena 구조 차용) -->
+            <div id="multiplayer-columns-container" class="flex-1 min-h-0 flex w-full overflow-hidden">
+                <!-- Dynamically injected columns by JS for Player 1 ~ Player N -->
+            </div>
+
+        </section>
+
+
+        <!-- 3. INSTRUMENT GALLERY & SOUND PLAYER VIEW -->
+        <section id="view-gallery" class="w-full max-w-7xl mx-auto glass-panel rounded-3xl p-6 hidden border border-yellow-500/30">
+            
+            <!-- Gallery Title & Search Bar -->
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/60">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold gold-gradient-text flex items-center gap-3">
+                        <i class="fa-solid fa-book-open text-amber-400"></i>악기 소리 도감
+                    </h2>
+                    <p class="text-slate-300 text-xs sm:text-sm mt-1">원하는 악기를 클릭하여 커진 화면으로 감상하고 소리를 들어보세요!</p>
+                </div>
+
+                <!-- Search -->
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative flex-1 md:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="gallery-search-input" oninput="filterGallery()" placeholder="악기 이름 검색..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery Category Tabs -->
+            <div class="flex flex-wrap items-center gap-2 mb-6" id="gallery-filter-tabs">
+                <button data-cat="all" onclick="filterGalleryCategory('all')" class="gallery-tab active px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm transition-all">전체 (37)</button>
+                <button data-cat="현악기" onclick="filterGalleryCategory('현악기')" class="gallery-tab px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-medium text-sm hover:bg-slate-700 transition-all">현악기</button>
+                <button data-cat="관악기" onclick="filterGalleryCategory('관악기')" class="gallery-tab px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-medium text-sm hover:bg-slate-700 transition-all">관악기</button>
+                <button data-cat="타악기" onclick="filterGalleryCategory('타악기')" class="gallery-tab px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-medium text-sm hover:bg-slate-700 transition-all">타악기</button>
+                <button data-cat="국악기" onclick="filterGalleryCategory('국악기')" class="gallery-tab px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm hover:bg-slate-700 transition-all text-amber-300">🇰🇷 국악기 (12)</button>
+            </div>
+
+            <!-- Instrument Grid Container -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="gallery-grid">
+                <!-- Instrument Cards rendered by JS -->
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- (제일 아래 저작권 표시 제거 완료) -->
+
+
+    <!-- MODAL 1: INSTRUMENT DETAIL SOUND PLAYER MODAL (악기 소리 감상 대형 모달) -->
+    <div id="modal-instrument-detail" class="modal-fade fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-panel w-full max-w-2xl rounded-3xl overflow-hidden border border-yellow-500/40 shadow-2xl relative">
+            
+            <!-- Close Button -->
+            <button onclick="closeInstrumentModal()" class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-slate-900/80 text-white font-bold text-xl flex items-center justify-center hover:bg-red-600 transition-colors border border-slate-700">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="p-6 sm:p-8 flex flex-col items-center text-center">
+                
+                <!-- Category Tag -->
+                <span id="modal-inst-category" class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/40 mb-2">
+                    카테고리
+                </span>
+
+                <!-- Instrument Name -->
+                <h3 id="modal-inst-name" class="text-3xl font-extrabold gold-gradient-text mb-4">
+                    악기 이름
+                </h3>
+
+                <!-- Large Image Container -->
+                <div class="relative w-56 h-56 sm:w-72 sm:h-72 rounded-2xl overflow-hidden border-4 border-amber-400/80 shadow-2xl bg-black mb-6 group">
+                    <img id="modal-inst-image" src="" alt="악기 이미지" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
+
+                <!-- Sound Play / Stop Button -->
+                <div class="flex items-center justify-center gap-4 mb-6 w-full">
+                    <button id="modal-btn-play-sound" onclick="toggleModalSound()" class="sound-wave-btn purple-gradient-btn px-8 py-3.5 rounded-2xl font-bold text-xl text-white flex items-center justify-center gap-3 w-full max-w-md">
+                        <i id="modal-play-icon" class="fa-solid fa-play text-xl"></i>
+                        <span id="modal-play-text">소리 듣기</span>
+                    </button>
+                </div>
+
+                <!-- Description Box -->
+                <div class="w-full bg-slate-900/90 rounded-2xl p-4 border border-slate-700/80 text-left">
+                    <p class="text-slate-400 text-xs font-bold mb-1">악기 설명</p>
+                    <p id="modal-inst-desc" class="text-slate-200 text-sm sm:text-base leading-relaxed font-medium">
+                        악기에 대한 상세 설명이 들어갑니다.
+                    </p>
+                </div>
+
+                <!-- Navigation between instruments -->
+                <div class="flex items-center justify-between w-full mt-6 pt-4 border-t border-slate-800">
+                    <button onclick="navigateModalInstrument(-1)" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-chevron-left"></i> 이전 악기
+                    </button>
+                    <span id="modal-inst-counter" class="text-slate-400 font-bold text-xs sm:text-sm">1 / 37</span>
+                    <button onclick="navigateModalInstrument(1)" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs sm:text-sm flex items-center gap-2">
+                        다음 악기 <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- MODAL 2: QUIZ RESULT MODAL (1~6인용 대결 결과창) -->
+    <div id="modal-quiz-result" class="modal-fade fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden">
+        <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 text-center border border-yellow-500/50 shadow-2xl relative">
+            
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-3xl shadow-lg shadow-amber-500/40 mb-3">
+                🏆
+            </div>
+
+            <h3 class="text-3xl font-extrabold gold-gradient-text mb-2">악기소리킹 퀴즈 종료!</h3>
+            <p id="result-grade-text" class="text-lg font-bold text-amber-300 mb-6">모두 정말 수고 많으셨습니다!</p>
+
+            <!-- 1~6P Leaderboard Score Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6" id="result-leaderboard-grid">
+                <!-- Injected by JS -->
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="closeResultModal(); startQuizGame();" class="purple-gradient-btn flex-1 py-3.5 rounded-xl font-bold text-lg text-white flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> 다시 대결하기
+                </button>
+                <button onclick="closeResultModal(); switchView('gallery');" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-5 py-3.5 rounded-xl font-bold text-base text-slate-200">
+                    도감 구경
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- INCLUDE INSTRUMENT DATA FILE -->
+    <script src="kingmh_inst/instruments_data.js"></script>
+
+    <!-- MAIN APP JAVASCRIPT -->
+    <script>
+        // ----------------------------------------------------
+        // GLOBAL STATE & DATA
+        // ----------------------------------------------------
+        let currentView = 'game-setup'; 
+        let selectedPlayerCount = 6; // Default: 6인용
+        let selectedQuestionCount = 8;
+        let selectedCategoryFilter = 'all'; 
+        let selectedQuizMode = 'mixed'; // Default: mixed (소리+그림 혼합)
+
+        // Quiz State
+        let currentQuizIndex = 0;
+        let quizQuestions = [];
+        let playerScores = [0, 0, 0, 0, 0, 0];
+        let playerCorrectCount = [0, 0, 0, 0, 0, 0];
+        // playerAnswers[p] = null (not answered yet) or { id: selectedInstId, time: Date.now() }
+        let playerAnswers = [null, null, null, null, null, null];
+        let hintCountdownInterval = null; // 2번째 힌트(그림/소리/이름) 공개 전 5,4,3,2,1 카운트다운
+        let questionTimerInterval = null; // 문제당 전체 제한시간(30초) 카운트다운
+        let questionTimeLeft = 30;
+        let autoNextTimeout = null; // 정답 공개 후 자동으로 다음 문제로 넘어가는 타이머
+        let questionRevealed = false; // 현재 문제의 정답이 공개되었는지 여부
+
+        // Audio Objects
+        let currentAudio = null;
+        let modalAudio = null;
+
+        // Modal Gallery State
+        let modalInstrumentIndex = 0;
+        let currentFilteredGalleryList = [];
+
+        // Audio SFX
+        const sfxCorrect = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
+        const sfxWrong = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3');
+
+        // ----------------------------------------------------
+        // INITIALIZATION & TAB SWITCHING
+        // ----------------------------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGallery();
+        });
+
+        function switchView(viewName) {
+            stopAllAudio();
+            clearAllQuestionTimers();
+            document.body.classList.remove('quiz-fullscreen');
+
+            document.getElementById('view-game-setup').classList.add('hidden');
+            document.getElementById('view-quiz-playing').classList.add('hidden');
+            document.getElementById('view-gallery').classList.add('hidden');
+
+            if (viewName === 'game-setup') {
+                document.getElementById('view-game-setup').classList.remove('hidden');
+            } else if (viewName === 'gallery') {
+                document.getElementById('view-gallery').classList.remove('hidden');
+                renderGallery();
+            }
+            currentView = viewName;
+        }
+
+        // 화면 왼쪽에 항상 떠 있는 홈 버튼: 확인창 없이 즉시 첫 화면(설정 화면)으로 이동
+        function goHomeInstantly() {
+            switchView('game-setup');
+        }
+
+        // 화면 오른쪽에 항상 떠 있는 전체화면 토글 버튼 (전자칠판에서 주소창까지 완전히 가리고 싶을 때 사용)
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log('전체화면 전환 실패:', err.message);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // ----------------------------------------------------
+        // SETUP OPTIONS HANDLERS
+        // ----------------------------------------------------
+        function selectPlayerCount(pCount) {
+            selectedPlayerCount = pCount;
+            document.querySelectorAll('.p-count-btn').forEach(btn => {
+                const pc = parseInt(btn.getAttribute('data-pcount'));
+                if (pc === pCount) {
+                    btn.classList.add('border-amber-400', 'bg-amber-500/20', 'text-amber-300', 'font-extrabold');
+                    btn.classList.remove('border-slate-600', 'font-bold');
+                } else {
+                    btn.classList.remove('border-amber-400', 'bg-amber-500/20', 'text-amber-300', 'font-extrabold');
+                    btn.classList.add('border-slate-600', 'font-bold');
+                }
+            });
+        }
+
+        function selectQuestionCount(count) {
+            selectedQuestionCount = count;
+            document.querySelectorAll('.q-count-btn').forEach(btn => {
+                const c = parseInt(btn.getAttribute('data-count'));
+                if (c === count) {
+                    btn.classList.add('border-amber-400', 'bg-amber-500/20', 'text-amber-300', 'font-extrabold');
+                    btn.classList.remove('border-slate-600', 'font-bold');
+                } else {
+                    btn.classList.remove('border-amber-400', 'bg-amber-500/20', 'text-amber-300', 'font-extrabold');
+                    btn.classList.add('border-slate-600', 'font-bold');
+                }
+            });
+        }
+
+        function selectQuizMode(mode) {
+            selectedQuizMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                const m = btn.getAttribute('data-mode');
+                if (m === mode) {
+                    btn.classList.add('border-amber-400', 'bg-amber-500/20', 'text-amber-300', 'font-extrabold');
+                    btn.classList.remove('border-slate-600', 'font-bold');
+                } else {
+                    btn.classList.remove('border-amber-400', 'bg-amber-500/20', 'text-amber-300', 'font-extrabold');
+                    btn.classList.add('border-slate-600', 'font-bold');
+                }
+            });
+        }
+
+        function selectCategory(cat) {
+            selectedCategoryFilter = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                const c = btn.getAttribute('data-cat');
+                if (c === cat) {
+                    btn.classList.add('border-amber-400', 'bg-amber-500/20', 'text-amber-300', 'font-extrabold');
+                    btn.classList.remove('border-slate-600', 'font-bold');
+                } else {
+                    btn.classList.remove('border-amber-400', 'bg-amber-500/20', 'text-amber-300', 'font-extrabold');
+                    btn.classList.add('border-slate-600', 'font-bold');
+                }
+            });
+        }
+
+        // ----------------------------------------------------
+        // MULTIPLAYER QUIZ GAME ENGINE (1~6인용 6열 구조)
+        // ----------------------------------------------------
+        function pickPromptOrder(quizType) {
+            // name 모드: 그림 <-> 소리 순서를 랜덤으로, image 모드: 이름(제목) <-> 소리 순서를 랜덤으로
+            if (quizType === 'name') {
+                return Math.random() > 0.5 ? ['image', 'sound'] : ['sound', 'image'];
+            }
+            return Math.random() > 0.5 ? ['text', 'sound'] : ['sound', 'text'];
+        }
+
+        function startQuizGame() {
+            stopAllAudio();
+
+            let pool = [...instrumentsDB];
+            if (selectedCategoryFilter === 'western') {
+                pool = pool.filter(inst => inst.category !== '국악기');
+            } else if (selectedCategoryFilter === 'korean') {
+                pool = pool.filter(inst => inst.category === '국악기');
+            }
+
+            if (pool.length < 4) {
+                alert('해당 카테고리의 악기 수가 부족합니다. 전체 악기를 선택해주세요!');
+                return;
+            }
+
+            const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+            const questionCount = Math.min(selectedQuestionCount, shuffledPool.length);
+            const targetPool = shuffledPool.slice(0, questionCount);
+
+            quizQuestions = targetPool.map(targetInst => {
+                const remainingPool = instrumentsDB.filter(item => item.id !== targetInst.id);
+                const wrongOptions = remainingPool.sort(() => Math.random() - 0.5).slice(0, 3);
+                const options = [targetInst, ...wrongOptions].sort(() => Math.random() - 0.5);
+
+                // quizType: 'name' = 보기가 악기 이름(글자), 'image' = 보기가 악기 그림
+                let quizType = selectedQuizMode;
+                if (selectedQuizMode === 'mixed') {
+                    quizType = Math.random() > 0.5 ? 'name' : 'image';
+                }
+
+                return {
+                    target: targetInst,
+                    options: options,
+                    quizType: quizType,
+                    promptOrder: pickPromptOrder(quizType),
+                    phaseShown: [false, false]
+                };
+            });
+
+            currentQuizIndex = 0;
+            playerScores = [0, 0, 0, 0, 0, 0];
+            playerCorrectCount = [0, 0, 0, 0, 0, 0];
+
+            document.getElementById('view-game-setup').classList.add('hidden');
+            document.getElementById('view-quiz-playing').classList.remove('hidden');
+            document.body.classList.add('quiz-fullscreen');
+            document.getElementById('player-mode-badge').innerText = `👥 ${selectedPlayerCount}인용 전자칠판 모드`;
+
+            renderCurrentQuestion();
+        }
+
+        function clearAllQuestionTimers() {
+            clearInterval(hintCountdownInterval);
+            hintCountdownInterval = null;
+            clearInterval(questionTimerInterval);
+            questionTimerInterval = null;
+            clearTimeout(autoNextTimeout);
+            autoNextTimeout = null;
+        }
+
+        // 2번째 힌트(그림/소리/이름) 공개 전 5,4,3,2,1 카운트다운을 보여준 뒤 힌트를 노출
+        // (좌측 및 우측 2개 박스에 동일하게 카운트다운 표시)
+        function startHintCountdown(q) {
+            let secondsLeft = 5;
+            const wrap1 = document.getElementById('hint-countdown-wrap-1');
+            const num1 = document.getElementById('hint-countdown-num-1');
+            const wrap2 = document.getElementById('hint-countdown-wrap-2');
+            const num2 = document.getElementById('hint-countdown-num-2');
+
+            if (wrap1) wrap1.classList.remove('invisible');
+            if (wrap2) wrap2.classList.remove('invisible');
+            if (num1) num1.innerText = secondsLeft;
+            if (num2) num2.innerText = secondsLeft;
+
+            clearInterval(hintCountdownInterval);
+            hintCountdownInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(hintCountdownInterval);
+                    hintCountdownInterval = null;
+                    if (wrap1) wrap1.classList.add('invisible');
+                    if (wrap2) wrap2.classList.add('invisible');
+                    showPromptPhase(q, 1);
+                } else {
+                    if (num1) num1.innerText = secondsLeft;
+                    if (num2) num2.innerText = secondsLeft;
+                }
+            }, 1000);
+        }
+
+        // 문제당 전체 제한시간 30초: 시간이 다 되면 자동으로 정답 공개
+        function startQuestionTimer() {
+            questionTimeLeft = 30;
+            const numEl = document.getElementById('question-timer-num');
+            const badgeEl = document.getElementById('question-timer-badge');
+            numEl.innerText = questionTimeLeft;
+            badgeEl.classList.remove('timer-urgent', 'text-red-400', 'border-red-500');
+
+            clearInterval(questionTimerInterval);
+            questionTimerInterval = setInterval(() => {
+                questionTimeLeft--;
+                numEl.innerText = questionTimeLeft;
+                if (questionTimeLeft <= 5 && questionTimeLeft > 0) {
+                    badgeEl.classList.add('timer-urgent', 'text-red-400', 'border-red-500');
+                }
+                if (questionTimeLeft <= 0) {
+                    clearInterval(questionTimerInterval);
+                    questionTimerInterval = null;
+                    revealAnswers(); // 제한시간 종료 시 자동 정답 공개
+                }
+            }, 1000);
+        }
+
+        function renderCurrentQuestion() {
+            stopAllAudio();
+            clearAllQuestionTimers();
+            playerAnswers = [null, null, null, null, null, null];
+            questionRevealed = false;
+
+            const q = quizQuestions[currentQuizIndex];
+
+            document.getElementById('quiz-current-num').innerText = currentQuizIndex + 1;
+            document.getElementById('quiz-total-num').innerText = quizQuestions.length;
+
+            const progressPct = ((currentQuizIndex) / quizQuestions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = progressPct + '%';
+
+            document.getElementById('btn-next-question').classList.add('hidden');
+            document.getElementById('btn-reveal-answer').classList.add('hidden');
+
+            // 좌측 / 우측 2개 프롬프트 영역 전부 초기화
+            [1, 2].forEach(id => {
+                const holder = document.getElementById(`prompt-visual-placeholder-${id}`);
+                const img = document.getElementById(`prompt-image-${id}`);
+                const txt = document.getElementById(`prompt-text-${id}`);
+                const wrap = document.getElementById(`hint-countdown-wrap-${id}`);
+                const audioWrap = document.getElementById(`prompt-audio-container-${id}`);
+                const eq = document.getElementById(`audio-eq-bars-${id}`);
+
+                if (holder) holder.classList.remove('hidden');
+                if (img) img.classList.add('hidden');
+                if (txt) txt.classList.add('hidden');
+                if (wrap) wrap.classList.add('invisible');
+                if (audioWrap) audioWrap.classList.add('invisible');
+                if (eq) eq.classList.add('invisible');
+            });
+
+            const questionText = document.getElementById('question-text');
+            questionText.innerText = (q.quizType === 'name')
+                ? '📝 그림과 소리를 순서대로 확인하고, 아래에서 악기 "이름"을 맞혀보세요!'
+                : '🖼️ 이름과 소리를 순서대로 확인하고, 아래에서 악기 "그림"을 맞혀보세요!';
+
+            // 1번째 힌트는 즉시 공개, 2번째 힌트는 5,4,3,2,1 카운트다운 후 공개
+            showPromptPhase(q, 0);
+            startHintCountdown(q);
+
+            // 문제당 전체 제한시간 30초 시작
+            startQuestionTimer();
+
+            // Render 1~6 Columns for Players
+            renderPlayerColumns();
+        }
+
+        function showPromptPhase(q, phaseIdx) {
+            if (q.phaseShown[phaseIdx]) return;
+            q.phaseShown[phaseIdx] = true;
+
+            const kind = q.promptOrder[phaseIdx];
+            [1, 2].forEach(id => {
+                const holder = document.getElementById(`prompt-visual-placeholder-${id}`);
+                const img = document.getElementById(`prompt-image-${id}`);
+                const txt = document.getElementById(`prompt-text-${id}`);
+                const audioWrap = document.getElementById(`prompt-audio-container-${id}`);
+
+                if (kind === 'image') {
+                    if (holder) holder.classList.add('hidden');
+                    if (img) {
+                        img.src = 'kingmh_inst/' + q.target.image_path;
+                        img.classList.remove('hidden');
+                    }
+                } else if (kind === 'text') {
+                    if (holder) holder.classList.add('hidden');
+                    if (txt) {
+                        txt.innerText = q.target.name;
+                        txt.classList.remove('hidden');
+                    }
+                } else if (kind === 'sound') {
+                    if (audioWrap) audioWrap.classList.remove('invisible');
+                }
+            });
+
+            if (kind === 'sound') {
+                playCurrentPromptSound();
+            }
+        }
+
+        // 4개 보기를 count명의 플레이어에게 서로 겹치지 않는 배치 순서로 나눠줌
+        function generateDistinctOptionOrders(options, count) {
+            const seenKeys = new Set();
+            const results = [];
+            let safetyCounter = 0;
+            while (results.length < count && safetyCounter < 300) {
+                safetyCounter++;
+                const shuffled = [...options].sort(() => Math.random() - 0.5);
+                const key = shuffled.map(o => o.id).join(',');
+                if (!seenKeys.has(key)) {
+                    seenKeys.add(key);
+                    results.push(shuffled);
+                }
+            }
+            while (results.length < count) {
+                results.push([...options].sort(() => Math.random() - 0.5));
+            }
+            return results;
+        }
+
+        function renderPlayerColumns() {
+            const container = document.getElementById('multiplayer-columns-container');
+            container.innerHTML = '';
+
+            // 사용자 요구사항 적용:
+            // - 6인용일 때만 6열 (w-1/6)
+            // - 5인용일 때 5열 가득 채움 (w-1/5)
+            // - 1~4인용일 때도 5인용 규격 사이즈(w-1/5 폭)를 유지하여 그림/글자가 절대 좌우로 잘리지 않도록 함!
+            const is6Player = (selectedPlayerCount === 6);
+            const is5Player = (selectedPlayerCount === 5);
+
+            let containerClass = "flex-1 min-h-0 flex w-full h-full overflow-hidden ";
+            if (is6Player || is5Player) {
+                containerClass += ""; // 5인용/6인용일 때 빈틈없이 딱 붙음
+            } else {
+                // 1~4인용일 때: 5인용 1/5 너비 폭을 유지하면서 컬럼 간격이 뷰포트에 일정하게 균등 배분(justify-evenly)되어 예쁘게 떨어짐
+                containerClass += "justify-evenly items-center px-4 py-1";
+            }
+            container.className = containerClass;
+
+            const q = quizQuestions[currentQuizIndex];
+            const playerOptionOrders = generateDistinctOptionOrders(q.options, selectedPlayerCount);
+
+            for (let p = 0; p < selectedPlayerCount; p++) {
+                const pNum = p + 1;
+                const colCard = document.createElement('div');
+
+                let cardClass = "";
+                if (is6Player) {
+                    cardClass = `flex-none w-1/6 h-full flex flex-col justify-between p-2 sm:p-3 p-col-${pNum} bg-slate-900/60 border-r border-slate-700/60 last:border-r-0 relative`;
+                } else if (is5Player) {
+                    cardClass = `flex-none w-1/5 h-full flex flex-col justify-between p-2 sm:p-3 p-col-${pNum} bg-slate-900/60 border-r border-slate-700/60 last:border-r-0 relative`;
+                } else {
+                    // 1~4인용: 5인용 너비(w-1/5)로 여유 있고 널찍하게 라운드 카드로 표시!
+                    cardClass = `flex-none w-1/5 h-full flex flex-col justify-between p-2 sm:p-3 p-col-${pNum} bg-slate-900/60 rounded-2xl border border-slate-700/60 shadow-lg relative`;
+                }
+
+                colCard.className = cardClass;
+
+                const optionsHtml = playerOptionOrders[p].map(opt => {
+                    if (q.quizType === 'name') {
+                        return `
+                            <button onclick="checkPlayerAnswer(${p}, '${opt.id}', this)" data-opt-id="${opt.id}" class="p-opt-card-${p} option-card h-full w-full flex items-center justify-center text-center rounded-xl border border-slate-700 p-1">
+                                <span class="text-sm sm:text-base lg:text-lg font-extrabold text-white leading-tight">${opt.name}</span>
+                            </button>`;
+                    }
+                    return `
+                        <button onclick="checkPlayerAnswer(${p}, '${opt.id}', this)" data-opt-id="${opt.id}" class="p-opt-card-${p} option-card h-full w-full flex items-center justify-center rounded-xl border border-slate-700 overflow-hidden p-1">
+                            <img src="kingmh_inst/${opt.image_path}" alt="보기" class="w-full h-full object-cover rounded-lg pointer-events-none">
+                        </button>`;
+                }).join('');
+
+                colCard.innerHTML = `
+                    <div class="flex-none flex items-center justify-between mb-1.5 sm:mb-2 pb-1.5 border-b border-slate-700/60">
+                        <span class="px-2.5 py-0.5 rounded-md text-xs font-black p-badge-${pNum}">
+                            ${pNum}P
+                        </span>
+                        <div class="text-right">
+                            <span class="text-amber-400 font-extrabold text-lg" id="p-score-${p}">${playerScores[p]}</span>
+                            <span class="text-slate-400 text-xs">점</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex-1 min-h-0">
+                        <div class="grid grid-cols-2 grid-rows-2 gap-1.5 sm:gap-2 h-full" id="p-options-grid-${p}">
+                            ${optionsHtml}
+                        </div>
+                        <div class="hidden absolute inset-0 rounded-xl bg-slate-950/95 flex-col items-center justify-center gap-1 border-2 border-amber-400/60 z-20" id="p-lock-${p}">
+                            <span class="text-3xl sm:text-4xl">🔒</span>
+                            <span class="text-amber-300 font-extrabold text-xs sm:text-sm">제출 완료!</span>
+                        </div>
+                        <!-- 정답 공개 시 화면 정 가운데 크게 O(정답)/X(오답) 표시 -->
+                        <div class="hidden absolute inset-0 items-center justify-center z-30 pointer-events-none" id="p-result-mark-${p}">
+                            <span id="p-result-icon-${p}" class="text-6xl sm:text-8xl lg:text-9xl font-black leading-none"></span>
+                        </div>
+                    </div>
+
+                    <div class="hidden absolute -top-2 -right-2 px-2.5 py-1 rounded-full bg-yellow-400 text-slate-950 font-black text-xs shadow-lg z-30 whitespace-nowrap" id="p-scoregain-${p}"></div>
+                `;
+
+                container.appendChild(colCard);
+            }
+        }
+
+        function playCurrentPromptSound() {
+            stopAllAudio();
+            const q = quizQuestions[currentQuizIndex];
+            const soundPath = 'kingmh_inst/' + q.target.sample_path;
+
+            currentAudio = new Audio(soundPath);
+            currentAudio.loop = !questionRevealed;
+
+            [1, 2].forEach(id => {
+                const btn = document.getElementById(`btn-play-prompt-sound-${id}`);
+                const eq = document.getElementById(`audio-eq-bars-${id}`);
+                if (btn) btn.classList.add('playing');
+                if (eq) eq.classList.remove('invisible');
+            });
+
+            currentAudio.play().catch(e => console.log('Audio autoplay prevented:', e));
+
+            currentAudio.onended = () => {
+                [1, 2].forEach(id => {
+                    const btn = document.getElementById(`btn-play-prompt-sound-${id}`);
+                    const eq = document.getElementById(`audio-eq-bars-${id}`);
+                    if (btn) btn.classList.remove('playing');
+                    if (eq) eq.classList.add('invisible');
+                });
+            };
+        }
+
+        function checkPlayerAnswer(pIndex, selectedId, clickedBtn) {
+            if (questionRevealed) return; // 이미 정답이 공개된 문제
+            if (playerAnswers[pIndex]) return; // 이미 답변한 플레이어
+
+            playerAnswers[pIndex] = { id: selectedId, time: Date.now() };
+
+            // 답을 제출한 플레이어의 화면(보기 영역)을 잠금 처리하여 다른 사람이 못 보게 가림
+            const pBtns = document.querySelectorAll(`.p-opt-card-${pIndex}`);
+            pBtns.forEach(btn => btn.style.pointerEvents = 'none');
+
+            const lockEl = document.getElementById(`p-lock-${pIndex}`);
+            lockEl.classList.remove('hidden');
+            lockEl.classList.add('flex');
+
+            // 한 명이라도 답을 하면 "정답 공개" 버튼을 눌러 확인할 수 있음
+            document.getElementById('btn-reveal-answer').classList.remove('hidden');
+
+            // 참여 인원 전원이 답했다면 자동으로 정답 공개
+            const answeredCount = playerAnswers.slice(0, selectedPlayerCount).filter(a => a !== null).length;
+            if (answeredCount >= selectedPlayerCount) {
+                revealAnswers();
+            }
+        }
+
+        function revealAnswers() {
+            if (questionRevealed) return;
+            questionRevealed = true;
+            stopAllAudio(); // 힌트 반복 재생 중이었다면 정답 공개와 함께 즉시 중지
+            clearInterval(hintCountdownInterval);
+            hintCountdownInterval = null;
+            clearInterval(questionTimerInterval);
+            questionTimerInterval = null;
+            [1, 2].forEach(id => {
+                const wrap = document.getElementById(`hint-countdown-wrap-${id}`);
+                if (wrap) wrap.classList.add('invisible');
+            });
+
+            const q = quizQuestions[currentQuizIndex];
+
+            // 아직 공개되지 않은 힌트(그림/소리/이름)가 있다면 정답 공개와 함께 전부 노출
+            showPromptPhase(q, 0);
+            showPromptPhase(q, 1);
+
+            document.getElementById('btn-reveal-answer').classList.add('hidden');
+
+            // 정답을 맞춘 플레이어들을 답변 속도(빠른 순)로 정렬
+            const correctPlayers = [];
+            for (let p = 0; p < selectedPlayerCount; p++) {
+                const ans = playerAnswers[p];
+                if (ans && ans.id === q.target.id) correctPlayers.push({ p, time: ans.time });
+            }
+            correctPlayers.sort((a, b) => a.time - b.time);
+
+            // 기본 10점 + 빨리 맞출수록 보너스: n명이 맞으면 1등부터 (n-1)점씩 보너스, 1명만 맞으면 보너스 없음
+            const correctCount = correctPlayers.length;
+            const roundScoreByPlayer = {};
+            correctPlayers.forEach((entry, rank) => {
+                roundScoreByPlayer[entry.p] = 10 + (correctCount - 1 - rank);
+            });
+
+            for (let p = 0; p < selectedPlayerCount; p++) {
+                // 잠금 해제 후 정답/오답 표시
+                const lockEl = document.getElementById(`p-lock-${p}`);
+                lockEl.classList.add('hidden');
+                lockEl.classList.remove('flex');
+
+                const ans = playerAnswers[p];
+                const pBtns = document.querySelectorAll(`.p-opt-card-${p}`);
+                pBtns.forEach(btn => {
+                    const optId = btn.getAttribute('data-opt-id');
+                    if (optId === q.target.id) btn.classList.add('correct');
+                    else if (ans && ans.id === optId) btn.classList.add('wrong');
+                });
+
+                // 답을 제출한 학생 화면 정 가운데에 크게 O(정답)/X(오답) 표시
+                if (ans) {
+                    const isCorrect = ans.id === q.target.id;
+                    const markEl = document.getElementById(`p-result-mark-${p}`);
+                    const iconEl = document.getElementById(`p-result-icon-${p}`);
+                    iconEl.textContent = isCorrect ? 'O' : 'X';
+                    iconEl.classList.remove('result-mark-correct', 'result-mark-wrong');
+                    iconEl.classList.add(isCorrect ? 'result-mark-correct' : 'result-mark-wrong');
+                    markEl.classList.remove('hidden');
+                    markEl.classList.add('flex');
+                }
+
+                const scoreGainEl = document.getElementById(`p-scoregain-${p}`);
+                if (roundScoreByPlayer[p] !== undefined) {
+                    const gained = roundScoreByPlayer[p];
+                    playerScores[p] += gained;
+                    playerCorrectCount[p]++;
+                    scoreGainEl.innerText = `+${gained}`;
+                    scoreGainEl.classList.remove('hidden');
+                }
+                document.getElementById(`p-score-${p}`).innerText = playerScores[p];
+            }
+
+            if (correctCount > 0) {
+                sfxCorrect.currentTime = 0;
+                sfxCorrect.play().catch(()=>{});
+                confetti({
+                    particleCount: 50 + correctCount * 20,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+            } else {
+                sfxWrong.currentTime = 0;
+                sfxWrong.play().catch(()=>{});
+            }
+
+            document.getElementById('btn-next-question').classList.remove('hidden');
+
+            // 정답 공개 후 잠시 결과를 보여준 뒤 자동으로 다음 문제로 진행 (호스트가 "다음 문제"를 눌러 더 빨리 넘어갈 수도 있음)
+            clearTimeout(autoNextTimeout);
+            autoNextTimeout = setTimeout(() => {
+                nextQuestion();
+            }, 4000);
+        }
+
+        function nextQuestion() {
+            clearTimeout(autoNextTimeout);
+            autoNextTimeout = null;
+            currentQuizIndex++;
+            if (currentQuizIndex >= quizQuestions.length) {
+                showQuizResult();
+            } else {
+                renderCurrentQuestion();
+            }
+        }
+
+        function exitQuizToSetup() {
+            if (confirm('진행 중인 퀴즈를 그만두시겠습니까?')) {
+                switchView('game-setup');
+            }
+        }
+
+        function showQuizResult() {
+            stopAllAudio();
+            clearAllQuestionTimers();
+
+            const grid = document.getElementById('result-leaderboard-grid');
+            grid.innerHTML = '';
+
+            // Sort players by score
+            const playerResults = [];
+            for (let p = 0; p < selectedPlayerCount; p++) {
+                playerResults.push({
+                    pNum: p + 1,
+                    score: playerScores[p],
+                    correctCount: playerCorrectCount[p]
+                });
+            }
+            playerResults.sort((a, b) => b.score - a.score);
+
+            playerResults.forEach((res, rank) => {
+                const item = document.createElement('div');
+                const rankMedal = rank === 0 ? '🥇' : (rank === 1 ? '🥈' : (rank === 2 ? '🥉' : '🎖️'));
+                item.className = 'glass-panel p-3 rounded-xl border border-slate-700 bg-slate-900/90 text-left';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-extrabold text-sm p-badge-${res.pNum} px-2 py-0.5 rounded">${res.pNum}P</span>
+                        <span class="text-lg">${rankMedal}</span>
+                    </div>
+                    <div class="text-xl font-extrabold text-yellow-400">${res.score}점</div>
+                    <div class="text-xs text-slate-400 font-medium">${res.correctCount} / ${quizQuestions.length}문제 정답</div>
+                `;
+                grid.appendChild(item);
+            });
+
+            const winnerText = `${playerResults[0].pNum}P 플레이어 우승! 👏`;
+            document.getElementById('result-grade-text').innerText = winnerText;
+
+            confetti({
+                particleCount: 150,
+                spread: 90,
+                origin: { y: 0.5 }
+            });
+
+            document.getElementById('modal-quiz-result').classList.remove('hidden');
+        }
+
+        function closeResultModal() {
+            document.getElementById('modal-quiz-result').classList.add('hidden');
+        }
+
+
+        // ----------------------------------------------------
+        // INSTRUMENT GALLERY & SOUND PLAYER
+        // ----------------------------------------------------
+        let currentGalleryCategory = 'all';
+
+        function renderGallery() {
+            const grid = document.getElementById('gallery-grid');
+            const searchInput = document.getElementById('gallery-search-input').value.toLowerCase().trim();
+
+            currentFilteredGalleryList = instrumentsDB.filter(inst => {
+                const matchesCat = (currentGalleryCategory === 'all') || (inst.category === currentGalleryCategory);
+                const matchesSearch = inst.name.toLowerCase().includes(searchInput) || inst.category.toLowerCase().includes(searchInput);
+                return matchesCat && matchesSearch;
+            });
+
+            grid.innerHTML = '';
+
+            currentFilteredGalleryList.forEach((inst, index) => {
+                const card = document.createElement('div');
+                card.className = 'glass-panel rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer hover:border-amber-400 transition-all hover:-translate-y-1 group';
+                card.onclick = () => openInstrumentModal(index);
+
+                const isKorean = (inst.category === '국악기');
+                const badgeColor = isKorean ? 'bg-red-500/30 text-red-300 border-red-500/40' : 'bg-blue-500/30 text-blue-300 border-blue-500/40';
+
+                card.innerHTML = `
+                    <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-black/60 mb-2 border border-slate-700/60">
+                        <img src="kingmh_inst/${inst.image_path}" alt="${inst.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shadow-md">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-bold border ${badgeColor} mb-1">
+                        ${inst.category}
+                    </span>
+                    <h4 class="text-base font-extrabold text-white group-hover:text-amber-300 text-center">
+                        ${inst.name}
+                    </h4>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterGalleryCategory(cat) {
+            currentGalleryCategory = cat;
+            document.querySelectorAll('.gallery-tab').forEach(tab => {
+                if (tab.getAttribute('data-cat') === cat) {
+                    tab.classList.add('bg-amber-500', 'text-slate-950', 'font-bold');
+                    tab.classList.remove('bg-slate-800', 'text-slate-300');
+                } else {
+                    tab.classList.remove('bg-amber-500', 'text-slate-950', 'font-bold');
+                    tab.classList.add('bg-slate-800', 'text-slate-300');
+                }
+            });
+            renderGallery();
+        }
+
+        function filterGallery() {
+            renderGallery();
+        }
+
+        // ----------------------------------------------------
+        // INSTRUMENT DETAIL SOUND MODAL
+        // ----------------------------------------------------
+        function openInstrumentModal(index) {
+            stopAllAudio();
+            modalInstrumentIndex = index;
+            const inst = currentFilteredGalleryList[modalInstrumentIndex];
+
+            document.getElementById('modal-inst-name').innerText = inst.name;
+            document.getElementById('modal-inst-category').innerText = inst.category;
+            document.getElementById('modal-inst-image').src = 'kingmh_inst/' + inst.image_path;
+            document.getElementById('modal-inst-desc').innerText = inst.description || '아름다운 소리를 내는 악기입니다.';
+            document.getElementById('modal-inst-counter').innerText = `${modalInstrumentIndex + 1} / ${currentFilteredGalleryList.length}`;
+
+            document.getElementById('modal-play-icon').className = 'fa-solid fa-play text-xl';
+            document.getElementById('modal-play-text').innerText = '소리 듣기';
+
+            document.getElementById('modal-instrument-detail').classList.remove('hidden');
+
+            toggleModalSound(true);
+        }
+
+        function closeInstrumentModal() {
+            stopAllAudio();
+            document.getElementById('modal-instrument-detail').classList.add('hidden');
+        }
+
+        function toggleModalSound(forcePlay = false) {
+            const inst = currentFilteredGalleryList[modalInstrumentIndex];
+            const soundPath = 'kingmh_inst/' + inst.sample_path;
+
+            const icon = document.getElementById('modal-play-icon');
+            const text = document.getElementById('modal-play-text');
+            const btn = document.getElementById('modal-btn-play-sound');
+
+            if (modalAudio && !modalAudio.paused && !forcePlay) {
+                modalAudio.pause();
+                icon.className = 'fa-solid fa-play text-xl';
+                text.innerText = '소리 듣기';
+                btn.classList.remove('playing');
+            } else {
+                stopAllAudio();
+                modalAudio = new Audio(soundPath);
+                modalAudio.play().catch(e => console.log(e));
+
+                icon.className = 'fa-solid fa-square text-xl text-yellow-300';
+                text.innerText = '소리 정지';
+                btn.classList.add('playing');
+
+                modalAudio.onended = () => {
+                    icon.className = 'fa-solid fa-play text-xl';
+                    text.innerText = '소리 듣기';
+                    btn.classList.remove('playing');
+                };
+            }
+        }
+
+        function navigateModalInstrument(direction) {
+            let nextIndex = modalInstrumentIndex + direction;
+            if (nextIndex < 0) nextIndex = currentFilteredGalleryList.length - 1;
+            if (nextIndex >= currentFilteredGalleryList.length) nextIndex = 0;
+            openInstrumentModal(nextIndex);
+        }
+
+        function stopAllAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            if (modalAudio) {
+                modalAudio.pause();
+                modalAudio = null;
+            }
+            [1, 2].forEach(id => {
+                const promptBtn = document.getElementById(`btn-play-prompt-sound-${id}`);
+                if (promptBtn) promptBtn.classList.remove('playing');
+
+                const eqBars = document.getElementById(`audio-eq-bars-${id}`);
+                if (eqBars) eqBars.classList.add('invisible');
+            });
+        }
+    </script>
+</body>
+</html>
