@@ -1281,10 +1281,11 @@
             const grid = document.getElementById('result-leaderboard-grid');
             grid.innerHTML = '';
 
-            // Sort players by score
+            // 1. Sort players by score & calculate ranks (동점자 동일 등수 처리)
             const playerResults = [];
             for (let p = 0; p < selectedPlayerCount; p++) {
                 playerResults.push({
+                    pIndex: p,
                     pNum: p + 1,
                     score: playerScores[p],
                     correctCount: playerCorrectCount[p]
@@ -1292,14 +1293,73 @@
             }
             playerResults.sort((a, b) => b.score - a.score);
 
-            playerResults.forEach((res, rank) => {
+            // Compute rank with ties handled
+            let currentRank = 1;
+            playerResults.forEach((res, i) => {
+                if (i > 0 && res.score < playerResults[i - 1].score) {
+                    currentRank = i + 1;
+                }
+                res.rank = currentRank;
+            });
+
+            // 2. Render rank & score overlay directly inside EACH player's choice board column!
+            playerResults.forEach((res) => {
+                const p = res.pIndex;
+                const lockOverlay = document.getElementById(`p-lock-${p}`);
+                const optionsGrid = document.getElementById(`p-options-grid-${p}`);
+
+                if (lockOverlay) {
+                    let medal = '🥇';
+                    let rankTitle = '1등';
+                    let rankBgColor = 'from-amber-500/30 to-yellow-500/20 border-amber-400 text-amber-300';
+                    let glowEffect = 'shadow-[0_0_25px_rgba(255,215,0,0.5)] border-4 border-amber-400';
+
+                    if (res.rank === 2) {
+                        medal = '🥈';
+                        rankTitle = '2등';
+                        rankBgColor = 'from-slate-400/30 to-slate-600/20 border-slate-300 text-slate-200';
+                        glowEffect = 'border-2 border-slate-300';
+                    } else if (res.rank === 3) {
+                        medal = '🥉';
+                        rankTitle = '3등';
+                        rankBgColor = 'from-amber-700/30 to-amber-900/20 border-amber-600 text-amber-400';
+                        glowEffect = 'border-2 border-amber-600';
+                    } else if (res.rank > 3) {
+                        medal = '🎖️';
+                        rankTitle = `${res.rank}등`;
+                        rankBgColor = 'from-slate-800/50 to-slate-900/50 border-slate-700 text-slate-400';
+                        glowEffect = 'border border-slate-700';
+                    }
+
+                    lockOverlay.className = `flex absolute inset-0 rounded-xl bg-slate-950/95 flex-col items-center justify-center p-2 gap-1.5 z-30 bg-gradient-to-b ${rankBgColor} ${glowEffect} transition-all duration-500`;
+
+                    lockOverlay.innerHTML = `
+                        <div class="text-3xl sm:text-5xl animate-bounce mb-0.5">${medal}</div>
+                        <div class="text-xl sm:text-2xl font-black text-amber-300 tracking-wider" style="text-shadow: 0 0 12px rgba(255,215,0,0.7);">${rankTitle}</div>
+                        <div class="text-2xl sm:text-3xl font-extrabold text-white my-0.5">${res.score}<span class="text-xs sm:text-sm text-slate-300 font-normal">점</span></div>
+                        <div class="text-[10px] sm:text-xs font-semibold text-slate-300 px-2 py-0.5 rounded-full bg-slate-900/80 border border-slate-700/80">
+                            ${res.correctCount} / ${quizQuestions.length} 정답
+                        </div>
+                    `;
+                }
+
+                // Update Header Score Highlight
+                const scoreEl = document.getElementById(`p-score-${p}`);
+                if (scoreEl) {
+                    scoreEl.innerText = res.score;
+                    scoreEl.className = 'text-amber-300 font-black text-xl sm:text-2xl';
+                }
+            });
+
+            // 3. Populate Central Leaderboard Modal
+            playerResults.forEach((res) => {
                 const item = document.createElement('div');
-                const rankMedal = rank === 0 ? '🥇' : (rank === 1 ? '🥈' : (rank === 2 ? '🥉' : '🎖️'));
+                const rankMedal = res.rank === 1 ? '🥇' : (res.rank === 2 ? '🥈' : (res.rank === 3 ? '🥉' : '🎖️'));
                 item.className = 'glass-panel p-3 rounded-xl border border-slate-700 bg-slate-900/90 text-left';
                 item.innerHTML = `
                     <div class="flex items-center justify-between mb-1">
                         <span class="font-extrabold text-sm p-badge-${res.pNum} px-2 py-0.5 rounded">${res.pNum}P</span>
-                        <span class="text-lg">${rankMedal}</span>
+                        <span class="text-lg">${rankMedal} ${res.rank}등</span>
                     </div>
                     <div class="text-xl font-extrabold text-yellow-400">${res.score}점</div>
                     <div class="text-xs text-slate-400 font-medium">${res.correctCount} / ${quizQuestions.length}문제 정답</div>
@@ -1307,12 +1367,12 @@
                 grid.appendChild(item);
             });
 
-            const winnerText = `${playerResults[0].pNum}P 플레이어 우승! 👏`;
+            const winnerText = `${playerResults[0].pNum}P 플레이어 우승! 👏 (${playerResults[0].score}점)`;
             document.getElementById('result-grade-text').innerText = winnerText;
 
             confetti({
-                particleCount: 150,
-                spread: 90,
+                particleCount: 180,
+                spread: 100,
                 origin: { y: 0.5 }
             });
 
