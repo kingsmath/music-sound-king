@@ -203,7 +203,8 @@ const instrumentsDB = [
     {
         "id": "gayageum",
         "name": "가야금",
-        "category": "국악기",
+        "category": "현악기",
+        "isKorean": true,
         "sample_path": "sound/가야금.mp3",
         "image_path": "img/gayageum.jpg",
         "description": "오동나무 울림통에 12개의 명주실 줄을 얹어 손가락으로 뜯거나 퉁겨 소리를 내는 대표적인 한국 전통 현악기입니다."
@@ -211,7 +212,8 @@ const instrumentsDB = [
     {
         "id": "geomungo",
         "name": "거문고",
-        "category": "국악기",
+        "category": "현악기",
+        "isKorean": true,
         "sample_path": "sound/거문고.mp3",
         "image_path": "img/geomungo.jpg",
         "description": "6개의 줄과 괘를 가지고 있으며 대나무 술대로 줄을 쳐서 묵직하고 장중한 선율을 연주하는 '백악지왕' 현악기입니다."
@@ -219,7 +221,8 @@ const instrumentsDB = [
     {
         "id": "kkwaenggwari",
         "name": "꽹과리",
-        "category": "국악기",
+        "category": "타악기",
+        "isKorean": true,
         "sample_path": "sound/꽹가리.mp3",
         "image_path": "img/kkwaenggwari.jpg",
         "description": "놋쇠로 만든 작고 맑으며 강렬하고 쨍쨍한 소리를 내는 타악기로, 풍물놀이와 사물놀이에서 리더 역할을 맡습니다."
@@ -227,7 +230,8 @@ const instrumentsDB = [
     {
         "id": "danso",
         "name": "단소",
-        "category": "국악기",
+        "category": "관악기",
+        "isKorean": true,
         "sample_path": "sound/단소.mp3",
         "image_path": "img/danso.jpg",
         "description": "세로로 불어서 소리를 내는 작고 아담한 대나무 관악기로, 맑고 청아한 음색이 특징입니다."
@@ -235,7 +239,8 @@ const instrumentsDB = [
     {
         "id": "sogeum",
         "name": "소금",
-        "category": "국악기",
+        "category": "관악기",
+        "isKorean": true,
         "sample_path": "sound/소금.mp3",
         "image_path": "img/sogeum.jpg",
         "description": "가로로 불어서 연주하는 높은 음역대의 대나무 관악기로, 투명하고 드높은 새소리와 같은 화려한 가락을 냅니다."
@@ -243,7 +248,8 @@ const instrumentsDB = [
     {
         "id": "janggu",
         "name": "장구",
-        "category": "국악기",
+        "category": "타악기",
+        "isKorean": true,
         "sample_path": "sound/장구.mp3",
         "image_path": "img/janggu.jpg",
         "description": "모래시계 모양의 통 양쪽에 가죽을 메운 대표적인 민속 타악기로, 궁채와 열채로 다채로운 장단을 만들어냅니다."
@@ -251,7 +257,8 @@ const instrumentsDB = [
     {
         "id": "jing",
         "name": "징",
-        "category": "국악기",
+        "category": "타악기",
+        "isKorean": true,
         "sample_path": "sound/징.mp3",
         "image_path": "img/jing.jpg",
         "description": "놋쇠로 만든 커다란 쇠북으로, 헝겊을 감은 채로 쳐서 은은하고 웅장하게 번지는 여운을 만들어냅니다."
@@ -259,7 +266,8 @@ const instrumentsDB = [
     {
         "id": "taepyeongso",
         "name": "태평소",
-        "category": "국악기",
+        "category": "관악기",
+        "isKorean": true,
         "sample_path": "sound/태평소.mp3",
         "image_path": "img/taepyeongso.jpg",
         "description": "나팔 모양의 금속 동구와 대나무 관으로 이루어진 관악기로, 매우 크고 날카로우며 화려한 소리를 냅니다."
@@ -267,7 +275,8 @@ const instrumentsDB = [
     {
         "id": "pyeongyeong",
         "name": "편경",
-        "category": "국악기",
+        "category": "타악기",
+        "isKorean": true,
         "sample_path": "sound/편경.mp3",
         "image_path": "img/pyeongyeong.jpg",
         "description": "ㄱ자 모양으로 깎은 16개의 돌(경석)을 틀에 걸어놓고 뿔망치로 쳐서 청아하고 정돈된 소리를 내는 궁중 아악 타악기입니다."
@@ -275,7 +284,8 @@ const instrumentsDB = [
     {
         "id": "pyeonjong",
         "name": "편종",
-        "category": "국악기",
+        "category": "타악기",
+        "isKorean": true,
         "sample_path": "sound/편종.mp3",
         "image_path": "img/pyeonjong.jpg",
         "description": "두께가 서로 다른 16개의 청동 종을 2단 틀에 걸어두고 망치로 쳐서 웅장하고 깊은 음률을 전하는 궁중 타악기입니다."
@@ -283,7 +293,8 @@ const instrumentsDB = [
     {
         "id": "haegeum",
         "name": "해금",
-        "category": "국악기",
+        "category": "현악기",
+        "isKorean": true,
         "sample_path": "sound/해금.mp3",
         "image_path": "img/haegeum.jpg",
         "description": "두 개의 줄 사이에 활을 넣고 문질러 소리를 내는 현악기로, 사람의 목소리처럼 다양하고 애절한 느낌을 잘 표현합니다."
@@ -291,7 +302,8 @@ const instrumentsDB = [
     {
         "id": "hyangpiri",
         "name": "향피리",
-        "category": "국악기",
+        "category": "관악기",
+        "isKorean": true,
         "sample_path": "sound/향피리.mp3",
         "image_path": "img/hyangpiri.jpg",
         "description": "대나무 관에 겹리드를 꽂아 부는 대표적인 관악기로, 주선율을 이끄는 힘차고 풍부하며 따뜻한 음색을 지녔습니다."

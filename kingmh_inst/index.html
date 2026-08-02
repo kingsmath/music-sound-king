@@ -462,7 +462,7 @@
             </div>
 
             <button class="start-game-btn resize-text" onclick="startSequence()" data-i18n="btn_start">게임 시작</button>
-            <a href="/" class="other-game-link resize-text" data-i18n="other_game">다른 게임 고르기</a>
+            <a href="http://킹수학.com" target="_self" class="other-game-link resize-text" data-i18n="other_game">다른 게임 고르기</a>
         </div>
     </div>
 
@@ -1226,7 +1226,7 @@
             `;
             el.onclick = () => selectArtwork(idx);
             
-            if (inst.category === '국악기') {
+            if (inst.isKorean || inst.category === '국악기') {
                 if (koreanGrid) koreanGrid.appendChild(el);
             } else if (inst.category === '관악기') {
                 windGrid.appendChild(el);

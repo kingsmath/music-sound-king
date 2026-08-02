@@ -11,7 +11,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>악기소리킹 & 소리 도감</title>
+    <title>악기 소리킹 - 전자칠판 1~6인용 악기 퀴즈 & 소리 도감</title>
     <meta name="description" content="전자칠판 전용 1~6인용 4지선다 악기소리킹 퀴즈 게임 & 악기 소리 도감! 동서양 악기 37종 수록">
     <meta name="keywords" content="악기소리킹, 악기소리, 국악기, 악기퀴즈, 음악교육, 전자칠판게임, 6인용게임">
 
@@ -295,15 +295,11 @@
             <div class="absolute -right-24 -top-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute -left-24 -bottom-24 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div class="su-badge inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">
-                👑 국악기, 서양악기 다 있다!
-            </div>
-
-            <div class="su-title-row flex items-center justify-center">
+            <div class="su-title-row flex items-center justify-center pt-2">
                 <div class="su-icon rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-amber-500/30 flex-none">
                     <i class="fa-solid fa-music"></i>
                 </div>
-                <h2 class="su-title font-extrabold gold-gradient-text leading-tight">악기소리킹</h2>
+                <h2 class="su-title font-extrabold gold-gradient-text leading-tight">악기 소리킹</h2>
             </div>
             <p class="su-subtitle text-slate-300">신나는 악기 소리와 그림을 보고 4지선다 중 정답을 맞혀보세요!</p>
 
@@ -373,7 +369,7 @@
 
                 <button onclick="startQuizGame()" class="su-start-btn purple-gradient-btn w-full rounded-2xl font-extrabold tracking-wide text-white flex items-center justify-center gap-2 sm:gap-3">
                     <i class="fa-solid fa-play"></i>
-                    <span>악기소리킹 게임 시작하기</span>
+                    <span>악기 소리킹 시작하기</span>
                 </button>
 
                 <div class="su-links flex items-center justify-center">
@@ -522,7 +518,7 @@
 
 
         <!-- 3. INSTRUMENT GALLERY & SOUND PLAYER VIEW -->
-        <section id="view-gallery" class="w-full max-w-7xl mx-auto glass-panel rounded-3xl p-6 hidden border border-yellow-500/30">
+        <section id="view-gallery" class="w-full max-w-7xl mx-auto glass-panel rounded-3xl p-4 sm:p-6 hidden border border-yellow-500/30 my-0 self-start">
             
             <!-- Gallery Title & Search Bar -->
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/60">
@@ -702,15 +698,29 @@
             clearAllQuestionTimers();
             document.body.classList.remove('quiz-fullscreen');
 
+            const mainEl = document.querySelector('main');
+
             document.getElementById('view-game-setup').classList.add('hidden');
             document.getElementById('view-quiz-playing').classList.add('hidden');
             document.getElementById('view-gallery').classList.add('hidden');
 
             if (viewName === 'game-setup') {
+                if (mainEl) {
+                    mainEl.className = 'flex-1 max-w-7xl w-full mx-auto p-2 flex flex-col justify-center overflow-hidden';
+                }
                 document.getElementById('view-game-setup').classList.remove('hidden');
+                window.scrollTo(0, 0);
             } else if (viewName === 'gallery') {
-                document.getElementById('view-gallery').classList.remove('hidden');
+                if (mainEl) {
+                    mainEl.className = 'flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 flex flex-col justify-start overflow-y-auto my-2';
+                }
+                const galleryEl = document.getElementById('view-gallery');
+                galleryEl.classList.remove('hidden');
                 renderGallery();
+
+                // 도감 진입 시 바로 상단 헤더/타이틀부터 볼 수 있도록 스크롤 0 리셋
+                if (mainEl) mainEl.scrollTop = 0;
+                window.scrollTo(0, 0);
             }
             currentView = viewName;
         }
@@ -806,9 +816,9 @@
 
             let pool = [...instrumentsDB];
             if (selectedCategoryFilter === 'western') {
-                pool = pool.filter(inst => inst.category !== '국악기');
+                pool = pool.filter(inst => !inst.isKorean && inst.category !== '국악기');
             } else if (selectedCategoryFilter === 'korean') {
-                pool = pool.filter(inst => inst.category === '국악기');
+                pool = pool.filter(inst => inst.isKorean || inst.category === '국악기');
             }
 
             if (pool.length < 4) {
@@ -1324,7 +1334,8 @@
             const searchInput = document.getElementById('gallery-search-input').value.toLowerCase().trim();
 
             currentFilteredGalleryList = instrumentsDB.filter(inst => {
-                const matchesCat = (currentGalleryCategory === 'all') || (inst.category === currentGalleryCategory);
+                const matchesCat = (currentGalleryCategory === 'all')
+                    || (currentGalleryCategory === '국악기' ? (inst.isKorean || inst.category === '국악기') : inst.category === currentGalleryCategory);
                 const matchesSearch = inst.name.toLowerCase().includes(searchInput) || inst.category.toLowerCase().includes(searchInput);
                 return matchesCat && matchesSearch;
             });
@@ -1336,7 +1347,7 @@
                 card.className = 'glass-panel rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer hover:border-amber-400 transition-all hover:-translate-y-1 group';
                 card.onclick = () => openInstrumentModal(index);
 
-                const isKorean = (inst.category === '국악기');
+                const isKorean = inst.isKorean || inst.category === '국악기';
                 const badgeColor = isKorean ? 'bg-red-500/30 text-red-300 border-red-500/40' : 'bg-blue-500/30 text-blue-300 border-blue-500/40';
 
                 card.innerHTML = `
