@@ -250,6 +250,49 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
+        /* 첫 화면 배경 장식: 화면 주변에 흩어진 악기 사진들 (움직이지 않음, 터치하면 소리 재생) */
+        #instrument-bg-decor {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .bg-decor-item {
+            position: absolute;
+            border-radius: 0.9rem;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            pointer-events: auto;
+            transform: rotate(var(--rot, 0deg));
+            transition: transform 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bg-decor-item:hover {
+            opacity: 1 !important;
+            border-color: rgba(255, 215, 0, 0.65);
+            transform: rotate(var(--rot, 0deg)) scale(1.12);
+            z-index: 1;
+        }
+        .bg-decor-item.bg-decor-pop {
+            animation: bg-decor-pop-anim 0.4s ease;
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .bg-decor-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+        @keyframes bg-decor-pop-anim {
+            0% { transform: rotate(var(--rot, 0deg)) scale(1); }
+            40% { transform: rotate(var(--rot, 0deg)) scale(1.35); box-shadow: 0 0 25px rgba(255, 215, 0, 0.7); }
+            100% { transform: rotate(var(--rot, 0deg)) scale(1); }
+        }
+
         /* ----------------------------------------------------------------
            첫 화면(설정 카드) 전용 유동(fluid) 크기 조절
            가로폭 기준 Tailwind sm: 브레이크포인트만으로는 "가로는 넓지만 세로는 짧은"
@@ -287,11 +330,14 @@
     <!-- 항상 떠 있는 전체화면 토글 버튼 (전자칠판에서 브라우저 주소창까지 완전히 가리고 싶을 때) -->
     <div id="btn-fullscreen-toggle" onclick="toggleFullscreen()" class="side-btn right-btn" title="전체화면">⛶</div>
 
+    <!-- 첫 화면 배경 장식: 다양한 악기 사진이 화면 곳곳에 랜덤하게(고정 위치로) 흩어져 있고, 터치하면 그 악기 소리가 재생됨 -->
+    <div id="instrument-bg-decor"></div>
+
     <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-2 flex flex-col justify-center overflow-hidden">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-2 flex flex-col justify-center overflow-hidden relative z-10 pointer-events-none">
 
         <!-- 1. QUIZ GAME SETUP VIEW (뷰포트 "높이" 기준 clamp()로 흐르듯 크기 조절 -> 어떤 해상도든 스크롤 없이 한 화면에 표시) -->
-        <section id="view-game-setup" class="setup-fluid w-full max-w-3xl mx-auto glass-panel rounded-3xl text-center relative overflow-hidden border border-yellow-500/30">
+        <section id="view-game-setup" class="setup-fluid w-full max-w-3xl mx-auto glass-panel rounded-3xl text-center relative overflow-hidden border border-yellow-500/30 pointer-events-auto">
             <div class="absolute -right-24 -top-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute -left-24 -bottom-24 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -385,7 +431,7 @@
 
 
         <!-- 2. IN-GAME MULTIPLAYER QUIZ VIEW (전자칠판 전체화면 모드: 상단 50% 문제 / 하단 50% 보기) -->
-        <section id="view-quiz-playing" class="hidden fixed inset-0 z-50 w-screen h-screen h-[100dvh] bg-[#06070a] flex flex-col overflow-hidden">
+        <section id="view-quiz-playing" class="hidden fixed inset-0 z-50 w-screen h-screen h-[100dvh] bg-[#06070a] flex flex-col overflow-hidden pointer-events-auto">
 
             <!-- TOP ZONE: 문제 영역, 화면 높이의 정확히 절반으로 고정 -->
             <div class="h-1/2 flex-none flex flex-col overflow-hidden border-b-2 border-yellow-500/30">
@@ -395,9 +441,6 @@
                     <div class="flex items-center gap-2 sm:gap-3">
                         <span class="px-3 sm:px-4 py-1 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-sm sm:text-lg border border-amber-500/40">
                             문제 <span id="quiz-current-num">1</span> / <span id="quiz-total-num">8</span>
-                        </span>
-                        <span id="player-mode-badge" class="px-2.5 sm:px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-bold text-xs sm:text-sm border border-purple-500/40">
-                            👥 6인용 전자칠판 모드
                         </span>
                         <!-- 문제당 전체 제한시간 30초 -->
                         <span id="question-timer-badge" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-slate-800 text-amber-300 font-black text-sm sm:text-lg border border-slate-600">
@@ -514,11 +557,19 @@
                 <!-- Dynamically injected columns by JS for Player 1 ~ Player N -->
             </div>
 
+            <!-- CENTER OVERLAY: 3초 후 화면 상하/좌우 정중앙에 시원하게 나타나는 "다시 대결하기" 버튼 (배경 검정색 완전히 제거하여 지판 성적표가 또렷이 보임) -->
+            <div id="center-restart-btn-wrap" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-transparent pointer-events-none">
+                <button onclick="switchView('game-setup')" class="pointer-events-auto purple-gradient-btn px-8 sm:px-12 py-4 sm:py-6 rounded-3xl font-extrabold text-xl sm:text-3xl text-white shadow-[0_10px_40px_rgba(0,0,0,0.8)] border-2 border-amber-300 flex items-center justify-center gap-3 sm:gap-4 hover:scale-105 active:scale-95 transition-all">
+                    <i class="fa-solid fa-rotate-right text-2xl sm:text-4xl text-amber-300 animate-spin-slow"></i>
+                    <span>다시 대결하기</span>
+                </button>
+            </div>
+
         </section>
 
 
         <!-- 3. INSTRUMENT GALLERY & SOUND PLAYER VIEW -->
-        <section id="view-gallery" class="w-full max-w-7xl mx-auto glass-panel rounded-3xl p-4 sm:p-6 hidden border border-yellow-500/30 my-0 self-start">
+        <section id="view-gallery" class="w-full max-w-7xl mx-auto glass-panel rounded-3xl p-4 sm:p-6 hidden border border-yellow-500/30 my-0 self-start pointer-events-auto">
             
             <!-- Gallery Title & Search Bar -->
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/60">
@@ -677,6 +728,7 @@
         // Audio Objects
         let currentAudio = null;
         let modalAudio = null;
+        let bgDecorAudio = null; // 첫 화면 배경 장식 악기를 터치했을 때 재생되는 소리
 
         // Modal Gallery State
         let modalInstrumentIndex = 0;
@@ -692,7 +744,104 @@
         document.addEventListener('DOMContentLoaded', () => {
             syncSetupUIOptions();
             renderGallery();
+            renderInstrumentBackgroundDecor();
         });
+
+        // ----------------------------------------------------
+        // 첫 화면 배경 장식: 다양한 악기 사진을 화면 곳곳에 랜덤 위치(고정, 움직이지 않음)로 흩뿌리고,
+        // 터치하면 그 악기의 실제 소리가 재생됨
+        // ----------------------------------------------------
+        function renderInstrumentBackgroundDecor() {
+            const container = document.getElementById('instrument-bg-decor');
+            if (!container || typeof instrumentsDB === 'undefined') return;
+            container.innerHTML = '';
+
+            // 최대한 다양하게: 악기 목록을 섞어서 겹치지 않게 뽑음
+            const shuffled = [...instrumentsDB].sort(() => Math.random() - 0.5);
+            const targetCount = Math.min(28, shuffled.length);
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            // 설정 카드가 실제로 차지하는 영역은 피해서 배치 (카드에 가려 안 보이거나 눌리지 않는 자리 낭비 방지)
+            const cardEl = document.getElementById('view-game-setup');
+            const cardRect = cardEl ? cardEl.getBoundingClientRect() : null;
+            const margin = 20;
+            const safeZone = (cardRect && cardRect.width > 0) ? {
+                left: Math.max(0, cardRect.left - margin),
+                right: Math.min(vw, cardRect.right + margin),
+                top: Math.max(0, cardRect.top - margin),
+                bottom: Math.min(vh, cardRect.bottom + margin)
+            } : null;
+
+            function overlapsSafeZone(x, y, size) {
+                if (!safeZone) return false;
+                return !(x + size < safeZone.left || x > safeZone.right || y + size < safeZone.top || y > safeZone.bottom);
+            }
+
+            // 이미 배치된 다른 악기 사진과 너무 많이 겹치면(=눌리지 않는 자리 낭비) 다시 뽑기
+            const placedRects = [];
+            function overlapsPlacedItem(x, y, size) {
+                const pad = 6;
+                for (const r of placedRects) {
+                    if (!(x + size < r.x - pad || x > r.x + r.size + pad || y + size < r.y - pad || y > r.y + r.size + pad)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            let poolIndex = 0;
+            let placed = 0;
+            let attempts = 0;
+            const maxAttempts = targetCount * 60;
+
+            while (placed < targetCount && attempts < maxAttempts) {
+                attempts++;
+                const size = Math.round(56 + Math.random() * 58); // 56px ~ 114px, 다양한 크기
+                const leftPx = Math.random() * Math.max(1, vw - size);
+                const topPx = Math.random() * Math.max(1, vh - size);
+
+                if (overlapsSafeZone(leftPx, topPx, size)) continue; // 설정 카드와 겹치면 다시 뽑기
+                if (overlapsPlacedItem(leftPx, topPx, size)) continue; // 다른 악기 사진과 겹치면 다시 뽑기
+
+                placedRects.push({ x: leftPx, y: topPx, size });
+
+                const inst = shuffled[poolIndex % shuffled.length];
+                poolIndex++;
+                placed++;
+
+                const rotate = (Math.random() * 26 - 13).toFixed(1); // -13deg ~ 13deg
+                const opacity = (0.55 + Math.random() * 0.35).toFixed(2); // 0.55 ~ 0.9
+
+                const el = document.createElement('button');
+                el.type = 'button';
+                el.className = 'bg-decor-item';
+                el.style.left = leftPx + 'px';
+                el.style.top = topPx + 'px';
+                el.style.width = size + 'px';
+                el.style.height = size + 'px';
+                el.style.setProperty('--rot', rotate + 'deg');
+                el.style.opacity = opacity;
+                el.title = inst.name + ' (터치하면 소리가 나요)';
+                el.innerHTML = `<img src="kingmh_inst/${inst.image_path}" alt="${inst.name}" loading="lazy">`;
+                el.onclick = () => playBgDecorSound(inst, el);
+
+                container.appendChild(el);
+            }
+        }
+
+        function playBgDecorSound(inst, el) {
+            if (bgDecorAudio) {
+                bgDecorAudio.pause();
+            }
+            bgDecorAudio = new Audio('kingmh_inst/' + inst.sample_path);
+            bgDecorAudio.play().catch(() => {});
+
+            el.classList.remove('bg-decor-pop');
+            void el.offsetWidth; // 애니메이션 재시작을 위한 리플로우 강제
+            el.classList.add('bg-decor-pop');
+        }
 
         function syncSetupUIOptions() {
             selectPlayerCount(selectedPlayerCount);
@@ -708,20 +857,29 @@
 
             const mainEl = document.querySelector('main');
 
+            const centerBtn = document.getElementById('center-restart-btn-wrap');
+            if (centerBtn) {
+                centerBtn.classList.add('hidden');
+                centerBtn.classList.remove('flex');
+            }
+
             document.getElementById('view-game-setup').classList.add('hidden');
             document.getElementById('view-quiz-playing').classList.add('hidden');
             document.getElementById('view-gallery').classList.add('hidden');
 
+            const bgDecor = document.getElementById('instrument-bg-decor');
+            if (bgDecor) bgDecor.classList.toggle('hidden', viewName !== 'game-setup');
+
             if (viewName === 'game-setup') {
                 if (mainEl) {
-                    mainEl.className = 'flex-1 max-w-7xl w-full mx-auto p-2 flex flex-col justify-center overflow-hidden';
+                    mainEl.className = 'flex-1 max-w-7xl w-full mx-auto p-2 flex flex-col justify-center overflow-hidden relative z-10 pointer-events-none';
                 }
                 syncSetupUIOptions(); // 이전 선택 옵션 세팅 상태를 기억하여 UI에 완벽히 동기화
                 document.getElementById('view-game-setup').classList.remove('hidden');
                 window.scrollTo(0, 0);
             } else if (viewName === 'gallery') {
                 if (mainEl) {
-                    mainEl.className = 'flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 flex flex-col justify-start overflow-y-auto my-2';
+                    mainEl.className = 'flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 flex flex-col justify-start overflow-y-auto my-2 relative z-10 pointer-events-none';
                 }
                 const galleryEl = document.getElementById('view-gallery');
                 galleryEl.classList.remove('hidden');
@@ -866,7 +1024,6 @@
             document.getElementById('view-game-setup').classList.add('hidden');
             document.getElementById('view-quiz-playing').classList.remove('hidden');
             document.body.classList.add('quiz-fullscreen');
-            document.getElementById('player-mode-badge').innerText = `👥 ${selectedPlayerCount}인용 전자칠판 모드`;
 
             renderCurrentQuestion();
         }
@@ -946,6 +1103,12 @@
 
             const progressPct = ((currentQuizIndex) / quizQuestions.length) * 100;
             document.getElementById('quiz-progress-bar').style.width = progressPct + '%';
+
+            const centerBtn = document.getElementById('center-restart-btn-wrap');
+            if (centerBtn) {
+                centerBtn.classList.add('hidden');
+                centerBtn.classList.remove('flex');
+            }
 
             document.getElementById('btn-next-question').classList.add('hidden');
             document.getElementById('btn-reveal-answer').classList.add('hidden');
@@ -1078,12 +1241,12 @@
                 const optionsHtml = playerOptionOrders[p].map(opt => {
                     if (q.quizType === 'name') {
                         return `
-                            <button onclick="checkPlayerAnswer(${p}, '${opt.id}', this)" data-opt-id="${opt.id}" class="p-opt-card-${p} option-card h-full w-full flex items-center justify-center text-center rounded-xl border border-slate-700 p-1">
-                                <span class="text-sm sm:text-base lg:text-lg font-extrabold text-white leading-tight">${opt.name}</span>
+                            <button onpointerdown="checkPlayerAnswer(${p}, '${opt.id}', this)" ontouchstart="checkPlayerAnswer(${p}, '${opt.id}', this)" onclick="checkPlayerAnswer(${p}, '${opt.id}', this)" data-opt-id="${opt.id}" class="p-opt-card-${p} option-card h-full w-full flex items-center justify-center text-center rounded-xl border border-slate-700 p-1 select-none touch-manipulation">
+                                <span class="text-sm sm:text-base lg:text-lg font-extrabold text-white leading-tight pointer-events-none">${opt.name}</span>
                             </button>`;
                     }
                     return `
-                        <button onclick="checkPlayerAnswer(${p}, '${opt.id}', this)" data-opt-id="${opt.id}" class="p-opt-card-${p} option-card h-full w-full flex items-center justify-center rounded-xl border border-slate-700 overflow-hidden p-1">
+                        <button onpointerdown="checkPlayerAnswer(${p}, '${opt.id}', this)" ontouchstart="checkPlayerAnswer(${p}, '${opt.id}', this)" onclick="checkPlayerAnswer(${p}, '${opt.id}', this)" data-opt-id="${opt.id}" class="p-opt-card-${p} option-card h-full w-full flex items-center justify-center rounded-xl border border-slate-700 overflow-hidden p-1 select-none touch-manipulation">
                             <img src="kingmh_inst/${opt.image_path}" alt="보기" class="w-full h-full object-cover rounded-lg pointer-events-none">
                         </button>`;
                 }).join('');
@@ -1287,10 +1450,19 @@
             stopAllAudio();
             clearAllQuestionTimers();
 
+            // 1. Hide all O/X result marks so final rank cards display cleanly
+            for (let p = 0; p < selectedPlayerCount; p++) {
+                const markEl = document.getElementById(`p-result-mark-${p}`);
+                if (markEl) {
+                    markEl.classList.add('hidden');
+                    markEl.classList.remove('flex');
+                }
+            }
+
             const grid = document.getElementById('result-leaderboard-grid');
             grid.innerHTML = '';
 
-            // 1. Sort players by score & calculate ranks (동점자 동일 등수 처리)
+            // 2. Sort players by score & calculate ranks (동점자 동일 등수 처리)
             const playerResults = [];
             for (let p = 0; p < selectedPlayerCount; p++) {
                 playerResults.push({
@@ -1311,43 +1483,42 @@
                 res.rank = currentRank;
             });
 
-            // 2. Render rank & score overlay directly inside EACH player's choice board column!
+            // 3. Render rank & score overlay DIRECTLY ON TOP OF EACH PLAYER'S CHOICE BOARD (z-40 layer)
             playerResults.forEach((res) => {
                 const p = res.pIndex;
                 const lockOverlay = document.getElementById(`p-lock-${p}`);
-                const optionsGrid = document.getElementById(`p-options-grid-${p}`);
 
                 if (lockOverlay) {
                     let medal = '🥇';
-                    let rankTitle = '1등';
-                    let rankBgColor = 'from-amber-500/30 to-yellow-500/20 border-amber-400 text-amber-300';
-                    let glowEffect = 'shadow-[0_0_25px_rgba(255,215,0,0.5)] border-4 border-amber-400';
+                    let rankTitle = '1등 (우승!)';
+                    let rankBgColor = 'from-amber-500/40 via-yellow-500/30 to-amber-600/40 border-amber-400 text-amber-300';
+                    let glowEffect = 'shadow-[0_0_35px_rgba(255,215,0,0.7)] border-4 border-amber-400 animate-pulse';
 
                     if (res.rank === 2) {
                         medal = '🥈';
-                        rankTitle = '2등';
-                        rankBgColor = 'from-slate-400/30 to-slate-600/20 border-slate-300 text-slate-200';
-                        glowEffect = 'border-2 border-slate-300';
+                        rankTitle = '2등 (준우승)';
+                        rankBgColor = 'from-slate-400/40 to-slate-600/30 border-slate-300 text-slate-200';
+                        glowEffect = 'shadow-[0_0_20px_rgba(200,200,200,0.5)] border-3 border-slate-300';
                     } else if (res.rank === 3) {
                         medal = '🥉';
                         rankTitle = '3등';
-                        rankBgColor = 'from-amber-700/30 to-amber-900/20 border-amber-600 text-amber-400';
-                        glowEffect = 'border-2 border-amber-600';
+                        rankBgColor = 'from-amber-700/40 to-amber-900/30 border-amber-500 text-amber-300';
+                        glowEffect = 'shadow-[0_0_15px_rgba(205,127,50,0.5)] border-2 border-amber-500';
                     } else if (res.rank > 3) {
                         medal = '🎖️';
                         rankTitle = `${res.rank}등`;
-                        rankBgColor = 'from-slate-800/50 to-slate-900/50 border-slate-700 text-slate-400';
+                        rankBgColor = 'from-slate-800/80 to-slate-900/90 border-slate-700 text-slate-300';
                         glowEffect = 'border border-slate-700';
                     }
 
-                    lockOverlay.className = `flex absolute inset-0 rounded-xl bg-slate-950/95 flex-col items-center justify-center p-2 gap-1.5 z-30 bg-gradient-to-b ${rankBgColor} ${glowEffect} transition-all duration-500`;
+                    lockOverlay.className = `flex absolute inset-0 rounded-xl bg-slate-950/95 flex-col items-center justify-center p-2 gap-1 z-40 bg-gradient-to-b ${rankBgColor} ${glowEffect} transition-all duration-500`;
 
                     lockOverlay.innerHTML = `
-                        <div class="text-3xl sm:text-5xl animate-bounce mb-0.5">${medal}</div>
-                        <div class="text-xl sm:text-2xl font-black text-amber-300 tracking-wider" style="text-shadow: 0 0 12px rgba(255,215,0,0.7);">${rankTitle}</div>
-                        <div class="text-2xl sm:text-3xl font-extrabold text-white my-0.5">${res.score}<span class="text-xs sm:text-sm text-slate-300 font-normal">점</span></div>
-                        <div class="text-[10px] sm:text-xs font-semibold text-slate-300 px-2 py-0.5 rounded-full bg-slate-900/80 border border-slate-700/80">
-                            ${res.correctCount} / ${quizQuestions.length} 정답
+                        <div class="text-4xl sm:text-6xl animate-bounce mb-1">${medal}</div>
+                        <div class="text-xl sm:text-3xl font-black text-amber-300 tracking-wide drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">${rankTitle}</div>
+                        <div class="text-3xl sm:text-4xl font-black text-white my-1">${res.score}<span class="text-sm sm:text-base text-slate-300 font-normal">점</span></div>
+                        <div class="text-xs sm:text-sm font-bold text-slate-200 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700/90 shadow-md">
+                            ${res.correctCount} / ${quizQuestions.length} 문제 정답
                         </div>
                     `;
                 }
@@ -1360,7 +1531,7 @@
                 }
             });
 
-            // 3. Populate Central Leaderboard Modal
+            // 4. Populate Central Leaderboard Modal
             playerResults.forEach((res) => {
                 const item = document.createElement('div');
                 const rankMedal = res.rank === 1 ? '🥇' : (res.rank === 2 ? '🥈' : (res.rank === 3 ? '🥉' : '🎖️'));
@@ -1368,7 +1539,7 @@
                 item.innerHTML = `
                     <div class="flex items-center justify-between mb-1">
                         <span class="font-extrabold text-sm p-badge-${res.pNum} px-2 py-0.5 rounded">${res.pNum}P</span>
-                        <span class="text-lg">${rankMedal} ${res.rank}등</span>
+                        <span class="text-lg font-bold text-amber-300">${rankMedal} ${res.rank}등</span>
                     </div>
                     <div class="text-xl font-extrabold text-yellow-400">${res.score}점</div>
                     <div class="text-xs text-slate-400 font-medium">${res.correctCount} / ${quizQuestions.length}문제 정답</div>
@@ -1379,13 +1550,21 @@
             const winnerText = `${playerResults[0].pNum}P 플레이어 우승! 👏 (${playerResults[0].score}점)`;
             document.getElementById('result-grade-text').innerText = winnerText;
 
+            // Trigger Fireworks / Confetti
             confetti({
-                particleCount: 180,
-                spread: 100,
+                particleCount: 220,
+                spread: 130,
                 origin: { y: 0.5 }
             });
 
-            document.getElementById('modal-quiz-result').classList.remove('hidden');
+            // 3초 후 화면 상하/좌우 정중앙에 시원하게 "다시 대결하기" 버튼만 딱 등장! (종료 팝업 모달은 전면 제거)
+            setTimeout(() => {
+                const centerBtn = document.getElementById('center-restart-btn-wrap');
+                if (centerBtn) {
+                    centerBtn.classList.remove('hidden');
+                    centerBtn.classList.add('flex');
+                }
+            }, 3000);
         }
 
         function closeResultModal() {
@@ -1527,6 +1706,10 @@
             if (modalAudio) {
                 modalAudio.pause();
                 modalAudio = null;
+            }
+            if (bgDecorAudio) {
+                bgDecorAudio.pause();
+                bgDecorAudio = null;
             }
             [1, 2].forEach(id => {
                 const promptBtn = document.getElementById(`btn-play-prompt-sound-${id}`);
