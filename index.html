@@ -635,7 +635,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <button onclick="closeResultModal(); startQuizGame();" class="purple-gradient-btn flex-1 py-3.5 rounded-xl font-bold text-lg text-white flex items-center justify-center gap-2">
+                <button onclick="closeResultModal(); switchView('game-setup');" class="purple-gradient-btn flex-1 py-3.5 rounded-xl font-bold text-lg text-white flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rotate-right"></i> 다시 대결하기
                 </button>
                 <button onclick="closeResultModal(); switchView('gallery');" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-5 py-3.5 rounded-xl font-bold text-base text-slate-200">
@@ -690,8 +690,16 @@
         // INITIALIZATION & TAB SWITCHING
         // ----------------------------------------------------
         document.addEventListener('DOMContentLoaded', () => {
+            syncSetupUIOptions();
             renderGallery();
         });
+
+        function syncSetupUIOptions() {
+            selectPlayerCount(selectedPlayerCount);
+            selectQuestionCount(selectedQuestionCount);
+            selectQuizMode(selectedQuizMode);
+            selectCategory(selectedCategoryFilter);
+        }
 
         function switchView(viewName) {
             stopAllAudio();
@@ -708,6 +716,7 @@
                 if (mainEl) {
                     mainEl.className = 'flex-1 max-w-7xl w-full mx-auto p-2 flex flex-col justify-center overflow-hidden';
                 }
+                syncSetupUIOptions(); // 이전 선택 옵션 세팅 상태를 기억하여 UI에 완벽히 동기화
                 document.getElementById('view-game-setup').classList.remove('hidden');
                 window.scrollTo(0, 0);
             } else if (viewName === 'gallery') {
