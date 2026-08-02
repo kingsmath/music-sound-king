@@ -491,13 +491,13 @@
                                     <span id="hint-countdown-num-1" class="text-lg sm:text-3xl font-black text-amber-300 leading-none" style="text-shadow:0 0 15px rgba(255,215,0,0.6);">5</span>
                                 </div>
                             </div>
-                            <!-- 메인 비주얼 (좌) -->
-                            <div id="prompt-main-visual-1" class="flex-none w-[18vh] h-[18vh] max-w-[170px] max-h-[170px] min-w-[90px] min-h-[90px] rounded-xl overflow-hidden border-2 border-amber-400/80 shadow-md bg-slate-950/80 flex items-center justify-center relative">
+                            <!-- 메인 비주얼 (좌) - 시원하게 크기 확대 -->
+                            <div id="prompt-main-visual-1" class="flex-none w-[22vh] h-[22vh] max-w-[210px] max-h-[210px] min-w-[100px] min-h-[100px] rounded-2xl overflow-hidden border-3 border-amber-400 shadow-xl bg-slate-950/90 flex items-center justify-center relative">
                                 <div id="prompt-visual-placeholder-1" class="flex flex-col items-center gap-1 text-slate-500">
-                                    <i class="fa-solid fa-circle-question text-2xl sm:text-4xl"></i>
+                                    <i class="fa-solid fa-circle-question text-3xl sm:text-5xl"></i>
                                 </div>
                                 <img id="prompt-image-1" src="" alt="문제 악기" class="hidden absolute inset-0 w-full h-full object-cover">
-                                <span id="prompt-text-1" class="hidden px-1 text-base sm:text-3xl font-extrabold gold-gradient-text tracking-wide text-center"></span>
+                                <span id="prompt-text-1" class="hidden px-2 text-2xl sm:text-4xl lg:text-5xl font-black gold-gradient-text tracking-wide text-center drop-shadow-lg"></span>
                             </div>
                             <!-- 소리 재생 버튼 (좌) -->
                             <div class="flex-none w-8 sm:w-14 flex items-center justify-center">
@@ -524,13 +524,13 @@
                                     <span id="hint-countdown-num-2" class="text-lg sm:text-3xl font-black text-amber-300 leading-none" style="text-shadow:0 0 15px rgba(255,215,0,0.6);">5</span>
                                 </div>
                             </div>
-                            <!-- 메인 비주얼 (우) -->
-                            <div id="prompt-main-visual-2" class="flex-none w-[18vh] h-[18vh] max-w-[170px] max-h-[170px] min-w-[90px] min-h-[90px] rounded-xl overflow-hidden border-2 border-amber-400/80 shadow-md bg-slate-950/80 flex items-center justify-center relative">
+                            <!-- 메인 비주얼 (우) - 시원하게 크기 확대 -->
+                            <div id="prompt-main-visual-2" class="flex-none w-[22vh] h-[22vh] max-w-[210px] max-h-[210px] min-w-[100px] min-h-[100px] rounded-2xl overflow-hidden border-3 border-amber-400 shadow-xl bg-slate-950/90 flex items-center justify-center relative">
                                 <div id="prompt-visual-placeholder-2" class="flex flex-col items-center gap-1 text-slate-500">
-                                    <i class="fa-solid fa-circle-question text-2xl sm:text-4xl"></i>
+                                    <i class="fa-solid fa-circle-question text-3xl sm:text-5xl"></i>
                                 </div>
                                 <img id="prompt-image-2" src="" alt="문제 악기" class="hidden absolute inset-0 w-full h-full object-cover">
-                                <span id="prompt-text-2" class="hidden px-1 text-base sm:text-3xl font-extrabold gold-gradient-text tracking-wide text-center"></span>
+                                <span id="prompt-text-2" class="hidden px-2 text-2xl sm:text-4xl lg:text-5xl font-black gold-gradient-text tracking-wide text-center drop-shadow-lg"></span>
                             </div>
                             <!-- 소리 재생 버튼 (우) -->
                             <div class="flex-none w-8 sm:w-14 flex items-center justify-center">
@@ -555,6 +555,14 @@
             <!-- BOTTOM ZONE: 참여 인원 전체가 화면 하단 절반을 빈틈없이 꽉 채우는 보기 영역 (전자칠판 1~6열 분할, 참고.html arena 구조 차용) -->
             <div id="multiplayer-columns-container" class="flex-1 min-h-0 flex w-full overflow-hidden">
                 <!-- Dynamically injected columns by JS for Player 1 ~ Player N -->
+            </div>
+
+            <!-- START COUNTDOWN OVERLAY: 게임 시작 처음에 3, 2, 1, 시작! 신나는 카운트다운 비주얼 & 효과음 -->
+            <div id="game-start-countdown-overlay" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-sm pointer-events-auto">
+                <div id="countdown-visual-box" class="flex flex-col items-center justify-center gap-4 transition-all transform scale-100">
+                    <span id="start-countdown-num" class="text-8xl sm:text-9xl font-black text-amber-300 drop-shadow-[0_0_35px_rgba(255,215,0,0.8)] animate-pulse" style="font-family: 'Outfit', sans-serif;">3</span>
+                    <span id="start-countdown-sub" class="text-xl sm:text-3xl font-extrabold text-white tracking-widest">준비하세요!</span>
+                </div>
             </div>
 
             <!-- CENTER OVERLAY: 3초 후 화면 상하/좌우 정중앙에 시원하게 나타나는 "다시 대결하기" 버튼 (배경 검정색 완전히 제거하여 지판 성적표가 또렷이 보임) -->
@@ -1025,7 +1033,93 @@
             document.getElementById('view-quiz-playing').classList.remove('hidden');
             document.body.classList.add('quiz-fullscreen');
 
-            renderCurrentQuestion();
+            // 신나는 3, 2, 1, 시작! 카운트다운 비주얼 & 효과음 연출 실행 후 1번 문제 시작
+            runGameStartCountdownSequence(() => {
+                renderCurrentQuestion();
+            });
+        }
+
+        // Web Audio API 기반 지연 없는 신나는 카운트다운 효과음 (3, 2, 1, 시작!)
+        function playStartCountdownBeep(freq = 523.25, isFinal = false) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = isFinal ? 'triangle' : 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+                gain.gain.setValueAtTime(0.35, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (isFinal ? 0.6 : 0.25));
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+                osc.stop(ctx.currentTime + (isFinal ? 0.6 : 0.25));
+
+                if (isFinal) {
+                    setTimeout(() => {
+                        const osc2 = ctx.createOscillator();
+                        const gain2 = ctx.createGain();
+                        osc2.type = 'sine';
+                        osc2.frequency.setValueAtTime(1046.50, ctx.currentTime);
+                        gain2.gain.setValueAtTime(0.3, ctx.currentTime);
+                        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                        osc2.connect(gain2);
+                        gain2.connect(ctx.destination);
+                        osc2.start();
+                        osc2.stop(ctx.currentTime + 0.5);
+                    }, 50);
+                }
+            } catch(e) {}
+        }
+
+        function runGameStartCountdownSequence(onComplete) {
+            const overlay = document.getElementById('game-start-countdown-overlay');
+            const numEl = document.getElementById('start-countdown-num');
+            const subEl = document.getElementById('start-countdown-sub');
+            if (!overlay || !numEl || !subEl) {
+                if (onComplete) onComplete();
+                return;
+            }
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            let step = 3;
+            numEl.innerText = step;
+            subEl.innerText = "준비하세요!";
+            playStartCountdownBeep(523.25, false); // 3 (C5)
+
+            const timer = setInterval(() => {
+                step--;
+                if (step === 2) {
+                    numEl.innerText = "2";
+                    subEl.innerText = "준비하세요!";
+                    playStartCountdownBeep(523.25, false); // 2 (C5)
+                } else if (step === 1) {
+                    numEl.innerText = "1";
+                    subEl.innerText = "집중하세요!";
+                    playStartCountdownBeep(659.25, false); // 1 (E5)
+                } else if (step === 0) {
+                    numEl.innerText = "시작! 🎵";
+                    subEl.innerText = "신나게 맞혀보세요!";
+                    playStartCountdownBeep(1046.50, true); // 시작! (C6 팡파르)
+                    confetti({
+                        particleCount: 80,
+                        spread: 70,
+                        origin: { y: 0.5 }
+                    });
+                } else {
+                    clearInterval(timer);
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                    if (onComplete) onComplete();
+                }
+            }, 850);
         }
 
         function clearAllQuestionTimers() {
@@ -1491,8 +1585,8 @@
                 if (lockOverlay) {
                     let medal = '🥇';
                     let rankTitle = '1등 (우승!)';
-                    let rankBgColor = 'from-amber-500/40 via-yellow-500/30 to-amber-600/40 border-amber-400 text-amber-300';
-                    let glowEffect = 'shadow-[0_0_35px_rgba(255,215,0,0.7)] border-4 border-amber-400 animate-pulse';
+                    let rankBgColor = 'from-amber-500 via-yellow-500 to-amber-600 border-amber-300 text-slate-950 font-black';
+                    let glowEffect = 'shadow-[0_0_30px_rgba(255,215,0,0.8)] border-4 border-amber-300';
 
                     if (res.rank === 2) {
                         medal = '🥈';
